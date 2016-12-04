@@ -97,7 +97,6 @@ Primary_Exp
     | Constant
     | STRING_LITERAL
     | BOOLEAN_LITERAL
-    | Func_Definition
     ;
 
 // 됨
@@ -210,12 +209,12 @@ Postfix_Exp
 
 // part4. 함수 선언
 
-// 됨
+// 됨 !
 Func_Definition
     : FUNC Func_Declarator Compound_Statement
     ;
 
-// 됨
+// 됨 !
 Func_Declarator
     : IDENTIFIER '(' Identifier_List ')'
     | IDENTIFIER '(' ')'
@@ -223,11 +222,14 @@ Func_Declarator
     | '(' ')' 
     ;
 
-// 됨
+// 됨 !
 Identifier_List
     : IDENTIFIER
     | Identifier_List ',' IDENTIFIER
     ;
+
+
+
 
 
 
