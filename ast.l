@@ -57,6 +57,8 @@ Identifier	{Letter}({Letter}|{Digit})*
 ";"		{ return(';'); }
 "?"		{ return('?'); }
 ":"		{ return(':'); }
+"{"		{ return('{'); }
+"}"		{ return('}'); }
 
 {Identifier}		{ yylval.sval = yytext; return(IDENTIFIER); }
 {Digit}+			{ yylval.ival = atoi(yytext); return(INT_LITERAL); }

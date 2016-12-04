@@ -210,10 +210,12 @@ Postfix_Exp
 
 // part4. 함수 선언
 
+// 됨
 Func_Definition
     : FUNC Func_Declarator Compound_Statement
     ;
 
+// 됨
 Func_Declarator
     : IDENTIFIER '(' Identifier_List ')'
     | IDENTIFIER '(' ')'
@@ -221,10 +223,75 @@ Func_Declarator
     | '(' ')' 
     ;
 
+// 됨
 Identifier_List
     : IDENTIFIER
     | Identifier_List ',' IDENTIFIER
     ;
+
+
+
+// part5. Statement 선언
+
+Statement
+    : Compound_Statement
+    | Exp_Statement
+    | Selection_Statement
+    | Iteration_Statement
+    | Jump_Statement
+    ;
+
+Compound_Statement
+    : '{' '}'
+    | '{' Statement_List '}'
+    | '{' Declaration_List '}'
+    | '{' Declaration_List Statement_List '}'
+    ;
+
+Declaration_List 
+    : Declaration
+    | Declaration_List ',' Declaration
+    ;
+
+Statement_List
+    : Statement
+    | Statement_List Statement
+    ;
+
+Exp_Statement
+    : ';'
+    | Exp ';'
+    ;
+
+Selection_Statement
+    : Matched
+    | UnMatched
+    ;
+
+Matched
+    : IF '(' Exp ')' Matched ELSE Matched
+    ;
+
+UnMatched
+    : IF '(' Exp ')' Statement
+    | IF '(' Exp ')' Matched ELSE UnMatched
+    ;
+
+Iteration_Statement
+    : WHILE '(' Exp ')' Statement
+    | FOR '(' Exp_Statement Exp_Statement ')' Statement
+    | FOR '(' Exp_Statement Exp_Statement Exp ')' Statement
+    ;
+
+Jump_Statement
+    : CONTINUE ';'
+    | BREAK ';'
+    | RETURN ';'
+    | RETURN Exp ';'
+    ;
+
+
+
 %%
 
 int main() {
