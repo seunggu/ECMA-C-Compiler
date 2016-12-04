@@ -98,6 +98,19 @@ Primary_Exp
     | STRING_LITERAL
     | BOOLEAN_LITERAL
     | Func_Definition
+    | List_Literal
+    ;
+
+// 됨
+List_Literal
+    : '[' Primary_Exp_List ']'
+    | '[' ']'
+    ;
+
+// 됨
+Primary_Exp_List
+    : Primary_Exp
+    | Primary_Exp_List ',' Primary_Exp
     ;
 
 // 됨
@@ -235,6 +248,7 @@ Identifier_List
 
 // part5. Statement 선언
 
+// 됨
 Statement
     : Compound_Statement
     | Exp_Statement
@@ -243,6 +257,7 @@ Statement
     | Jump_Statement
     ;
 
+// 됨
 Compound_Statement
     : '{' '}'
     | '{' Statement_List '}'
@@ -250,41 +265,49 @@ Compound_Statement
     | '{' Declaration_List Statement_List '}'
     ;
 
+//  됨
 Declaration_List 
     : Declaration
     | Declaration_List Declaration
     ;
 
+// 됨
 Statement_List
     : Statement
     | Statement_List Statement
     ;
 
+// 됨
 Exp_Statement
     : ';'
     | Exp ';'
     ;
 
+// 됨
 Selection_Statement
     : Matched
     | UnMatched
     ;
 
+// 됨
 Matched
     : IF '(' Exp ')' Matched ELSE Matched
     ;
 
+// 됨
 UnMatched
     : IF '(' Exp ')' Statement
     | IF '(' Exp ')' Matched ELSE UnMatched
     ;
 
+// 됨
 Iteration_Statement
     : WHILE '(' Exp ')' Statement
     | FOR '(' Exp_Statement Exp_Statement ')' Statement
     | FOR '(' Exp_Statement Exp_Statement Exp ')' Statement
     ;
 
+// 됨
 Jump_Statement
     : CONTINUE ';'
     | BREAK ';'
