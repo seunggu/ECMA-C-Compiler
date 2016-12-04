@@ -14,7 +14,15 @@ Identifier	{Letter}({Letter}|{Digit})*
 
 "sizeof"	{ return(SIZEOF); }
 "func"		{ return(FUNC); }
+"var"		{ return(VAR); }
 "struct"	{ return(STRUCT); }
+"if"		{ return(IF); }
+"else"		{ return(ELSE); }
+"while"		{ return(WHILE); }
+"for"		{ return(FOR); }
+"continue" 	{ return(CONTINUE); }
+"break"		{ return(BREAK); }
+"return"	{ return(RETURN); }
 
 "++"	{ return(INC_OP); }
 "--"	{ return(DEC_OP); }
@@ -41,11 +49,14 @@ Identifier	{Letter}({Letter}|{Digit})*
 "<"		{ return('<'); }
 ">"		{ return('>'); }
 "="		{ return('='); }
-"("		{ return ('('); }
-")"		{ return (')'); }
-"["		{ return ('['); }
-"]" 	{ return (']'); }
-"," 	{ return (','); }
+"("		{ return('('); }
+")"		{ return(')'); }
+"["		{ return('['); }
+"]" 	{ return(']'); }
+"," 	{ return(','); }
+";"		{ return(';'); }
+"?"		{ return('?'); }
+":"		{ return(':'); }
 
 {Identifier}		{ yylval.sval = yytext; return(IDENTIFIER); }
 {Digit}+			{ yylval.ival = atoi(yytext); return(INT_LITERAL); }
@@ -55,9 +66,8 @@ Identifier	{Letter}({Letter}|{Digit})*
 
 
 
-[ \t\r]	;
-\n	         { return(0); }
-.	           { printf("'%c': illegal character\n", yytext[0]); exit(-1); }
+[ \t\v\n\f]	{ }
+.	    	{ printf("'%c': illegal character\n", yytext[0]); exit(-1); }
 
 
 %%
