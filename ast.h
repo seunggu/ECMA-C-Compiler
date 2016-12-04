@@ -3,6 +3,8 @@
 
 #include <cstdio>
 
+using namespace std;
+
 #define TRUE 1
 #define FALSE 0
 
@@ -12,24 +14,22 @@ public:
     virtual void print(int lmargin) = 0;
 };
 
-// Exp 리스트 클래스
-class Exp;
-
-class ExpList {
-public:
-    Exp * list;
-
-    ExpList(char * l);
-    //virtual void print(int lmargin);
-};
-
 
 
 // Exp 추상 클래스
 class Exp {
 public:
     virtual void print(int lmargin);
-    virtual void printExp(int lmargin) = 0;
+    virtual void printExp(int lmargin);
+};
+
+class MultiExp : public Exp {
+public:
+    Exp * left;
+    Exp * right;
+
+    MultiExp(Exp * l, Exp * r);
+    virtual void printExp(int lmargin);
 };
 
 // Identifier 클래스
@@ -75,6 +75,16 @@ public:
   char * str;
 
     Str(const char * str);
+    virtual void printExp(int lmargin);
+};
+
+// 리스트 리터럴 클래스
+class ECMAList : public Exp {
+public:
+    Exp * val;
+
+    ECMAList();
+    ECMAList(Exp * val);
     virtual void printExp(int lmargin);
 };
 

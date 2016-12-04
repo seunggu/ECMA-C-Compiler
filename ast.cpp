@@ -6,15 +6,23 @@
 const int INDENT_LEVEL = 4;
 void indent(int n);
 
-// Exp 리스트 클래스
-ExpList::ExpList(char * l) {
-
-}
-
 
 // Exp 클래스
 void Exp::print(int lmargin) {
     printExp(lmargin);
+}
+
+void Exp::printExp(int lmargin) {
+
+}
+
+// Multi Exp 클래스
+MultiExp::MultiExp(Exp *l, Exp *r) : left(l), right(r) { }
+
+void MultiExp::printExp(int lmargin) {
+    indent(lmargin);
+    left -> printExp(lmargin);
+    right -> printExp(lmargin);
 }
 
 // ID 리터럴 클래스
@@ -41,7 +49,7 @@ DbNum::DbNum(double val) : val(val) { }
 
 void DbNum::printExp(int lmargin) {
     indent(lmargin);
-    printf("Int(%lf) \n", val);
+    printf("Double(%lf) \n", val);
 }
 
 // 정수 숫자 리터럴 클래스
@@ -60,7 +68,17 @@ Str::Str(const char * s) {
 
 void Str::printExp(int lmargin) {
     indent(lmargin);
-    printf("Str(\"%s\") \n", str);
+    printf("Str(%s) \n", str);
+}
+
+// 리스트 리터럴 클래스
+ECMAList::ECMAList() : val(NULL) { }
+ECMAList::ECMAList(Exp * val) : val(val) { }
+
+void ECMAList::printExp(int lmargin) {
+    indent(lmargin);
+    printf("List() \n");
+    val -> printExp(lmargin + INDENT_LEVEL);
 }
 
 

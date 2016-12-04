@@ -1,7 +1,9 @@
 %{  // Flex input
     #include <stdlib.h>
     #include <string.h>
+   	#include "ast.h"
     #include "y.tab.h"
+
 
     int GetIntFromBool(char * s);
 %}
@@ -63,7 +65,7 @@ Identifier	{Letter}({Letter}|{Digit})*
 {Identifier}		{ yylval.sval = yytext; return(IDENTIFIER); }
 {Digit}+			{ yylval.ival = atoi(yytext); return(INT_LITERAL); }
 {Digit}+"."{Digit}+	{ yylval.dval = atof(yytext); return(DOUBLE_LITERAL); }
-\"(.)*\"			{ yylval.sval = yytext; return(STRING_LITERAL); }
+\"[^(").]*\"			{ yylval.sval = yytext; return(STRING_LITERAL); }
 "TRUE"|"FALSE" 		{ yylval.ival = GetIntFromBool(yytext); return(BOOLEAN_LITERAL); }
 
 
