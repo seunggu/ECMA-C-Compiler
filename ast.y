@@ -17,6 +17,9 @@
 %token <ival> INT_LITERAL BOOLEAN_LITERAL
 %token <dval> DOUBLE_LITERAL
 
+%nonassoc IFX
+%nonassoc ELSE
+
 %start Translation_Unit
 %%
 
@@ -279,19 +282,8 @@ Exp_Statement
 
 // 됨
 Selection_Statement
-    : Matched
-    | UnMatched
-    ;
-
-// 됨
-Matched
-    : IF '(' Exp ')' Matched ELSE Matched
-    ;
-
-// 됨
-UnMatched
-    : IF '(' Exp ')' Statement
-    | IF '(' Exp ')' Matched ELSE UnMatched
+    : IF '(' Exp ')' Statement %prec IFX
+    | IF '(' Exp ')' Statement ELSE Statement
     ;
 
 // 됨
