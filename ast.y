@@ -94,7 +94,8 @@ Direct_Declarator
 // 됨
 Primary_Exp
     : IDENTIFIER
-    | Constant
+    | INT_LITERAL
+    | DOUBLE_LITERAL
     | STRING_LITERAL
     | BOOLEAN_LITERAL
     | List_Literal
@@ -110,12 +111,6 @@ List_Literal
 Primary_Exp_List
     : Primary_Exp
     | Primary_Exp_List ',' Primary_Exp
-    ;
-
-// 됨
-Constant
-    : INT_LITERAL
-    | DOUBLE_LITERAL
     ;
 
 // 됨
