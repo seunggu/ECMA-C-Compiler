@@ -231,6 +231,8 @@ Identifier_List
 
 
 
+
+
 // part5. Statement 선언
 
 Statement
@@ -250,7 +252,7 @@ Compound_Statement
 
 Declaration_List 
     : Declaration
-    | Declaration_List ',' Declaration
+    | Declaration_List Declaration
     ;
 
 Statement_List
@@ -289,8 +291,6 @@ Jump_Statement
     | RETURN ';'
     | RETURN Exp ';'
     ;
-
-
 
 %%
 
