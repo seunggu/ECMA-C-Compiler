@@ -39,6 +39,7 @@ External_Decl
 
 
 
+
 // part2: 변수 선언
 
 // 됨
@@ -96,6 +97,7 @@ Primary_Exp
     | Constant
     | STRING_LITERAL
     | BOOLEAN_LITERAL
+    | Func_Definition
     ;
 
 // 됨
@@ -202,6 +204,27 @@ Postfix_Exp
     ;
 
 
+
+
+
+
+// part4. 함수 선언
+
+Func_Definition
+    : FUNC Func_Declarator Compound_Statement
+    ;
+
+Func_Declarator
+    : IDENTIFIER '(' Identifier_List ')'
+    | IDENTIFIER '(' ')'
+    | '(' Identifier_List ')'
+    | '(' ')' 
+    ;
+
+Identifier_List
+    : IDENTIFIER
+    | Identifier_List ',' IDENTIFIER
+    ;
 %%
 
 int main() {
