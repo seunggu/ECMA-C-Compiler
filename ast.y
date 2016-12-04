@@ -20,7 +20,7 @@
 %start Translation_Unit
 %%
 
-// part1: 변수 선언
+// part1: 프로그램 선언
 
 // 됨
 Translation_Unit
@@ -31,7 +31,15 @@ Translation_Unit
 // 됨
 External_Decl
     : Declaration
+    | Func_Definition
     ;
+
+
+
+
+
+
+// part2: 변수 선언
 
 // 됨
 Declaration 
@@ -74,7 +82,13 @@ Direct_Declarator
     | '(' Declarator ')'
     ;
 
-// part2: 각종 Exp 정리
+
+
+
+
+
+
+// part3: 각종 Exp 정리
 
 // 됨
 Primary_Exp
@@ -165,7 +179,17 @@ Unary_Exp
     : Postfix_Exp
     | INC_OP Unary_Exp
     | DEC_OP Unary_Exp
+    | Unary_Op Unary_Exp
     | SIZEOF Unary_Exp
+    ;
+
+// 됨
+Unary_Op
+    : '&'
+    | '*'
+    | '+'
+    | '-'
+    | '!'
     ;
 
 // 됨
@@ -176,6 +200,7 @@ Postfix_Exp
     | Postfix_Exp INC_OP
     | Postfix_Exp DEC_OP
     ;
+
 
 %%
 
