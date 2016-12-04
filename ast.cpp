@@ -107,6 +107,153 @@ void UExp::printExp(int lmargin) {
     exp -> printExp(lmargin + INDENT_LEVEL);
 }
 
+// 함수 Idenfier와 Parameter 클래스
+FuncIdParam::FuncIdParam(Exp * id, Exp * param) {
+    if (id == NULL && param == NULL) {
+        idenifier = NULL;
+        parameterList = NULL;
+    } else if (id == NULL) {
+        idenifier = NULL;
+        parameterList = param;
+    } else if (param == NULL) {
+        idenifier = id;
+        parameterList = NULL;
+    } else {
+        idenifier = id;
+        parameterList = param;
+    }
+}
+
+void FuncIdParam::printExp(int lmargin) {
+    indent(lmargin);
+
+    if (idenifier == NULL && parameterList == NULL) {
+        printf("Func No Identifier And No Parameter Info \n");
+    } else if (idenifier == NULL) {
+        printf("Func Parameter Info \n");
+        parameterList -> printExp(lmargin + INDENT_LEVEL);
+    } else if (parameterList == NULL) {
+        printf("Func Identifier Info \n");
+        idenifier -> printExp(lmargin + INDENT_LEVEL);;
+    } else {
+        printf("Func Identifier And Parameter Info \n");
+        idenifier -> printExp(lmargin + INDENT_LEVEL);
+        parameterList -> printExp(lmargin + INDENT_LEVEL);
+    };
+}
+
+
+// 함수 클래스
+Func::Func(Exp * idParam, Exp * stmt) : funcIdParam(idParam), statement(stmt) { }
+
+void Func::printExp(int lmargin) {
+    indent(lmargin);
+    printf("func \n");
+    funcIdParam -> printExp(lmargin + INDENT_LEVEL);
+    statement -> printExp(lmargin + INDENT_LEVEL);
+}
+
+// If Statement
+IfStatement::IfStatement(Exp * c, Exp * s, Exp * e) : condition(c), statement(s) {
+    if (e == NULL) {
+        elseStatement = NULL;
+    } else {
+        elseStatement = e;
+    }
+}
+
+void IfStatement::printExp(int lmargin) {
+    indent(lmargin);
+
+    if (elseStatement != NULL) {
+        printf("If ELSE");
+    } else {
+        printf("If");
+    }
+
+    condition -> printExp(lmargin + INDENT_LEVEL);
+    statement -> printExp(lmargin + INDENT_LEVEL);
+
+    if (elseStatement != NULL) {
+        elseStatement -> printExp(lmargin + INDENT_LEVEL);
+    }
+}
+
+// While Statement 클래스
+WhileStatement::WhileStatement(Exp * c, Exp * s) : condition(c), statement(s) { }
+
+void WhileStatement::printExp(int lmargin) {
+    indent(lmargin);
+    printf("While");
+    condition -> printExp(lmargin + INDENT_LEVEL);
+    statement -> printExp(lmargin + INDENT_LEVEL);
+}
+
+// For Statement 클래스
+ForStatement::ForStatement(Exp *i, Exp *c, Exp *l, Exp *s) : initStatement(i), conditionStatement(c), statement(s) {
+    if (l == NULL) {
+        lastExp = NULL;
+    } else {
+        lastExp = l;
+    }
+}
+
+void ForStatement::printExp(int lmargin) {
+    indent(lmargin);
+    printf("For");
+    initStatement -> printExp(lmargin + INDENT_LEVEL);
+    conditionStatement -> printExp(lmargin + INDENT_LEVEL);
+    if (lastExp != NULL) {
+        lastExp -> printExp(lmargin + INDENT_LEVEL);
+    }
+    statement -> printExp(lmargin + INDENT_LEVEL);
+}
+
+// Compound Statement 클래스
+CompoundStatement::CompoundStatement(Exp * stmt, Exp * decl) {
+    if (stmt == NULL && decl == NULL) {
+        statement = NULL;
+        declaration = NULL;
+    } else if (stmt == NULL) {
+        statement = NULL;
+        declaration = decl;
+    } else if (decl == NULL) {
+        statement = stmt;
+        declaration = NULL;
+    } else {
+        statement = stmt;
+        declaration = decl;
+    }
+}
+
+void CompoundStatement::printExp(int lmargin) {
+    indent(lmargin);
+    printf("Compound Statement \n");
+    statement -> printExp(lmargin + INDENT_LEVEL);
+    declaration -> printExp(lmargin + INDENT_LEVEL);
+}
+
+// Jump Statement 클래스
+JumpStatement::JumpStatement(const char * n, Exp * r) {
+    name = (char*)malloc(strlen(n));
+    strcpy(name, n);
+
+    if (r == NULL) {
+        returnExp = NULL;
+    } else {
+        returnExp = r;
+    }
+}
+
+void JumpStatement::printExp(int lmargin) {
+    indent(lmargin);
+    printf("JumpStatement(%s) \n", name);
+
+    if (strcmp(name, "return") && returnExp != NULL) {
+        returnExp -> printExp(lmargin + INDENT_LEVEL);
+    }
+}
+
 
 // 헬퍼 메서드
 void printTree(Exp * root)

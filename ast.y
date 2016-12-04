@@ -25,11 +25,12 @@
 
 
 %type <sval> Assign_Op Unary_Op
-%type <expVal> Program Translation_Unit External_Decl Declaration
+%type <expVal> Program Translation_Unit External_Decl Declaration Declaration_List
 %type <expVal> Init_Declarator Init_Declarator_List Declarator Direct_Declarator Pointer
 %type <expVal> Primary_Exp List_Literal Primary_Exp_List Exp Assign_Exp Conditional_Exp 
 %type <expVal> Unary_Exp Logical_Or_Exp Logical_And_Exp Equal_Exp Rational_Exp Addtive_Exp Multiple_Exp Postfix_Exp 
-
+%type <expVal> Func_Definition Func_Declarator Identifier_List
+%type <expVal> Statement Compound_Statement Exp_Statement Selection_Statement Iteration_Statement Jump_Statement Statement_List 
 
 %nonassoc IFX
 %nonassoc ELSE
@@ -52,6 +53,7 @@ Translation_Unit
 // 됨
 External_Decl
     : Declaration                                       { $$ = $1; }
+    | Func_Definition                                   { $$ = $1; }
     ;
 
 
@@ -239,21 +241,21 @@ Postfix_Exp
 
 // 됨 !
 Func_Definition
-    : FUNC Func_Declarator Compound_Statement
+    : FUNC Func_Declarator Compound_Statement       { $$ = new Func($2, $3); }
     ;
 
 // 됨 !
 Func_Declarator
-    : IDENTIFIER '(' Identifier_List ')'
-    | IDENTIFIER '(' ')'
-    | '(' Identifier_List ')'
-    | '(' ')' 
+    : IDENTIFIER '(' Identifier_List ')'            { $$ = new FuncIdParam(new Id($1), $3); }
+    | IDENTIFIER '(' ')'                            { $$ = new FuncIdParam(new Id($1), NULL); }
+    | '(' Identifier_List ')'                       { $$ = new FuncIdParam(NULL, $2); }
+    | '(' ')'                                       { $$ = new FuncIdParam(NULL, NULL); }
     ;
 
 // 됨 !
 Identifier_List
-    : IDENTIFIER
-    | Identifier_List ',' IDENTIFIER
+    : IDENTIFIER                                    { $$ = new Id($1); }
+    | Identifier_List ',' IDENTIFIER                { $$ = new BExp(",", $1, new Id($3)); }
     ;
 
 
@@ -262,60 +264,60 @@ Identifier_List
 
 // part5. Statement 선언
 
-// 됨
+// 됨 
 Statement
-    : Compound_Statement
-    | Exp_Statement
-    | Selection_Statement
-    | Iteration_Statement
-    | Jump_Statement
+    : Compound_Statement                            { $$ = $1; }
+    | Exp_Statement                                 { $$ = $1; }
+    | Selection_Statement                           { $$ = $1; }
+    | Iteration_Statement                           { $$ = $1; }
+    | Jump_Statement                                { $$ = $1; }                           
     ;
 
 // 됨
 Compound_Statement
-    : '{' '}'
-    | '{' Statement_List '}'
-    | '{' Declaration_List '}'
-    | '{' Declaration_List Statement_List '}'
+    : '{' '}'                                       { $$ = new CompoundStatement(NULL, NULL); }
+    | '{' Statement_List '}'                        { $$ = new CompoundStatement($2, NULL); }
+    | '{' Declaration_List '}'                      { $$ = new CompoundStatement(NULL, $2); }
+    | '{' Declaration_List Statement_List '}'       { $$ = new CompoundStatement($2, $3); }
     ;
 
 //  됨
 Declaration_List 
-    : Declaration
-    | Declaration_List Declaration
+    : Declaration                                   { $$ = $1; }
+    | Declaration_List Declaration                  { $$ = new MultiExp($1, $2); }
     ;
 
 // 됨
 Statement_List
-    : Statement
-    | Statement_List Statement
+    : Statement                                     { $$ = $1; }
+    | Statement_List Statement                      { $$ = new MultiExp($1, $2); }
     ;
 
 // 됨
 Exp_Statement
-    : ';'
-    | Exp ';'
+    : ';'                                           { $$ = NULL; }
+    | Exp ';'                                       { $$ = $1; }
     ;
 
 // 됨
 Selection_Statement
-    : IF '(' Exp ')' Statement %prec IFX
-    | IF '(' Exp ')' Statement ELSE Statement
+    : IF '(' Exp ')' Statement %prec IFX            { $$ = new IfStatement($3, $5, NULL); }
+    | IF '(' Exp ')' Statement ELSE Statement       { $$ = new IfStatement($3, $5, $7); }
     ;
 
 // 됨
 Iteration_Statement
-    : WHILE '(' Exp ')' Statement
-    | FOR '(' Exp_Statement Exp_Statement ')' Statement
-    | FOR '(' Exp_Statement Exp_Statement Exp ')' Statement
+    : WHILE '(' Exp ')' Statement                               { $$ = new WhileStatement($3, $5); }
+    | FOR '(' Exp_Statement Exp_Statement ')' Statement         { $$ = new ForStatement($3, $4, NULL, $6); }
+    | FOR '(' Exp_Statement Exp_Statement Exp ')' Statement     { $$ = new ForStatement($3, $4, $5, $7); }
     ;
 
 // 됨
 Jump_Statement
-    : CONTINUE ';'
-    | BREAK ';'
-    | RETURN ';'
-    | RETURN Exp ';'
+    : CONTINUE ';'                                              { $$ = new JumpStatement("continue", NULL); }
+    | BREAK ';'                                                 { $$ = new JumpStatement("break", NULL); }
+    | RETURN ';'                                                { $$ = new JumpStatement("return", NULL); }
+    | RETURN Exp ';'                                            { $$ = new JumpStatement("return", $2); }
     ;
 
 %%

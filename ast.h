@@ -8,13 +8,6 @@ using namespace std;
 #define TRUE 1
 #define FALSE 0
 
-// 프로그램 클래스
-class Program {
-public:
-    virtual void print(int lmargin) = 0;
-};
-
-
 
 // Exp 추상 클래스
 class Exp {
@@ -99,6 +92,7 @@ public:
     virtual void printExp(int lmargin);
 };
 
+// 단항 연산자
 class UExp : public Exp {
 public:
     int isPre; // PreUnary이면 TRUE, PostUnary이면 FALSE
@@ -106,6 +100,79 @@ public:
     Exp * exp;
 
     UExp(const char * o, Exp * e, int isPre);
+    virtual void printExp(int lmargin);
+};
+
+// 함수 Idenfier와 Parameter 클래스
+class FuncIdParam : public Exp {
+public:
+    Exp * idenifier;
+    Exp * parameterList;
+
+    FuncIdParam(Exp * id, Exp * param);
+    virtual void printExp(int lmargin);
+};
+
+// 함수 클래스
+class Func : public Exp {
+public:
+    Exp * funcIdParam;
+    Exp * statement;
+
+    Func(Exp * idParam, Exp * stmt);
+    virtual void printExp(int lmargin);
+};
+
+// If Statement 클래스
+class IfStatement : public Exp {
+public:
+    Exp * condition;
+    Exp * statement;
+    Exp * elseStatement;
+
+    IfStatement(Exp * c, Exp * s, Exp * e);
+    virtual void printExp(int lmargin);
+};
+
+// While Statement 클래스
+class WhileStatement : public Exp {
+public:
+    Exp * condition;
+    Exp * statement;
+
+    WhileStatement(Exp * c, Exp * s);
+    virtual void printExp(int lmargin);
+};
+
+// For Statement 클래스
+class ForStatement : public Exp {
+public:
+    Exp * initStatement;
+    Exp * conditionStatement;
+    Exp * lastExp;
+    Exp * statement;
+
+    ForStatement(Exp * i, Exp * c, Exp * l, Exp * s);
+    virtual void printExp(int lmargin);
+};
+
+// Compound Statement 클래스
+class CompoundStatement : public Exp {
+public:
+    Exp * statement;
+    Exp * declaration;
+
+    CompoundStatement(Exp * stmt, Exp * decl);
+    virtual void printExp(int lmargin);
+};
+
+// Jump Statement 클래스
+class JumpStatement : public Exp {
+public:
+    char * name;
+    Exp * returnExp;
+
+    JumpStatement(const char * n, Exp * r);
     virtual void printExp(int lmargin);
 };
 
