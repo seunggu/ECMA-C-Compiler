@@ -2,28 +2,66 @@
 #define __AST_H__
 
 #include <cstdio>
+#include <iostream>
+#include <vector>
 
 using namespace std;
 
 #define TRUE 1
 #define FALSE 0
 
+// Program 클래스
+class Program {
+public:
+    TransUnit * transUnit;
 
-// Exp 추상 클래스
+    Program(TransUnit * unit);
+    void printProgram(int lmargin);
+};
+
+// TransUnit 클래스
+class TransUnit {
+public:
+    vector<Decl*> decls;
+
+    TransUnit();
+    void printTransUnit(int lmargin);
+};
+
+// Decl (Abstract Class)
+class Decl {
+public:
+    virtual void printDecl(int lmargin) = 0;
+};
+
+// VarDecl 클래스
+class VarDecl : public Decl {
+    DecltrInitList * decltrInitList;
+
+    VarDecl();
+    VarDecl(DecltrInitList * list);
+    virtual void printDecl(int lmargin);
+};
+
+// DecltrInitList 클래스
+class DecltrInitList {
+    vector<DecltrInit*> decltrInits;
+
+    void pushBack(DecltrInit * init);
+    void printDecltrInitList(int lmargin);
+};
+
+class DecltrInit {
+
+};
+
+
+// Exp (추상 클래스)
 class Exp {
 public:
-    virtual void print(int lmargin);
-    virtual void printExp(int lmargin);
+    virtual void printExp(int lmargin) = 0;
 };
 
-class MultiExp : public Exp {
-public:
-    Exp * left;
-    Exp * right;
-
-    MultiExp(Exp * l, Exp * r);
-    virtual void printExp(int lmargin);
-};
 
 // Identifier 클래스
 class Id : public Exp {

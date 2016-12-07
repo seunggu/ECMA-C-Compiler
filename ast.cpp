@@ -7,6 +7,54 @@ const int INDENT_LEVEL = 4;
 void indent(int n);
 
 
+// Program 클래스
+Program::Program(TransUnit * unit) : transUnit(unit) { }
+
+void Program::printProgram(int lmargin) {
+    cout << "Program" << endl;
+    transUnit -> printTransUnit(lmargin + INDENT_LEVEL);
+}
+
+// TransUnit 클래스
+TransUnit::TransUnit() { }
+
+void TransUnit::printTransUnit(int lmargin) {
+    int countOfDecls = (int)decls.size();
+    cout << "Decls" << endl;
+
+    for (int i = 0; i < countOfDecls; i++) {
+        decls[i] -> printDecl(lmargin + INDENT_LEVEL);
+    }
+}
+
+// VarDecl 클래스
+VarDecl::VarDecl() : decltrInitList(NULL) { }
+
+VarDecl::VarDecl(DecltrInitList *list) : decltrInitList(list) { }
+
+void VarDecl::printDecl(int lmargin) {
+    cout << "VarDecl" << endl;
+
+    if (decltrInitList != NULL) {
+        //decltrInitList
+    }
+}
+
+// DecltrInitList 클래스
+void DecltrInitList::pushBack(DecltrInit * init) {
+    decltrInits.push_back(init);
+}
+
+void DecltrInitList::printDecltrInitList(int lmargin) {
+    int countOfDecls = (int)decltrInits.size();
+    cout << "Declator Init List" << endl;
+
+    for (int i = 0; i < countOfDecls; i++) {
+        //decltrInits[i] -> printDecl(lmargin + INDENT_LEVEL);
+    }
+}
+
+
 // Exp 클래스
 void Exp::print(int lmargin) {
     printExp(lmargin);
