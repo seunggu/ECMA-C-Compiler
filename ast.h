@@ -11,57 +11,108 @@ using namespace std;
 #define FALSE 0
 
 // Program 클래스
+class Decl;
+
 class Program {
-public:
-    TransUnit * transUnit;
-
-    Program(TransUnit * unit);
-    void printProgram(int lmargin);
-};
-
-// TransUnit 클래스
-class TransUnit {
 public:
     vector<Decl*> decls;
 
-    TransUnit();
-    void printTransUnit(int lmargin);
+    Program(Decl * decl);
+    void printProgram(int lmargin);
+    void addDecl(Decl * decl);
 };
 
-// Decl (Abstract Class)
+// Declaration (Abstract Class)
 class Decl {
 public:
     virtual void printDecl(int lmargin) = 0;
 };
 
 // VarDecl 클래스
+class InitDeclaratorList;
+
 class VarDecl : public Decl {
-    DecltrInitList * decltrInitList;
+public:
+    InitDeclaratorList * initDecltrList;
 
     VarDecl();
-    VarDecl(DecltrInitList * list);
+    VarDecl(InitDeclaratorList * list);
     virtual void printDecl(int lmargin);
 };
 
-// DecltrInitList 클래스
-class DecltrInitList {
-    vector<DecltrInit*> decltrInits;
 
-    void pushBack(DecltrInit * init);
-    void printDecltrInitList(int lmargin);
+
+// Pointer 클래스
+class Pointer {
+public:
+    int count;
+
+    Pointer();
+    void addPointerCount();
+    void printPointer(int lmargin);
 };
 
-class DecltrInit {
+// Init Declarator List 클래스
+class InitDeclarator;
 
+class InitDeclaratorList {
+public:
+    vector<InitDeclarator*> initDeclatrators;
+
+    InitDeclaratorList();
+    InitDeclaratorList(InitDeclarator * initDecltr);
+    void printInitDeclaratorList(int lmargin);
+    void addInitDeclarator(InitDeclarator * initDecltr);
 };
 
+// Init Declarator 클래스
+class Declarator;
+class Exp;
+
+class InitDeclarator {
+public:
+    Declarator * declarator;
+    Exp * exp;
+
+    InitDeclarator(Declarator * decltr);
+    InitDeclarator(Declarator * decltr, Exp * e);
+    void printInitDeclarator(int lmargin);
+};
+
+// Declarator 클래스
+class Declarator {
+public:
+    virtual void printDeclarator(int lmargin) = 0;
+};
+
+// Pointer Declarator 클래스
+class Pointer;
+
+class PointerDeclarator : public Declarator {
+public:
+    Pointer * pointer;
+    Declarator * declarator;
+
+    PointerDeclarator(Pointer * ptr, Declarator * decl);
+    virtual void printDeclarator(int lmargin);
+};
+
+// Identifier Declarator 클래스
+class Id;
+
+class IdentifierDeclarator : public Declarator {
+public:
+    Id * identifier;
+
+    IdentifierDeclarator(Id * id);
+    virtual void printDeclarator(int lmargin);
+};
 
 // Exp (추상 클래스)
 class Exp {
 public:
     virtual void printExp(int lmargin) = 0;
 };
-
 
 // Identifier 클래스
 class Id : public Exp {
@@ -112,11 +163,12 @@ public:
 // 리스트 리터럴 클래스
 class ECMAList : public Exp {
 public:
-    Exp * val;
+    vector<Exp*> expList;
 
     ECMAList();
     ECMAList(Exp * val);
     virtual void printExp(int lmargin);
+    void addExp(Exp * val);
 };
 
 // 이항 연산자

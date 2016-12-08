@@ -7,12 +7,20 @@
 
     int yylex(void);
     int yyerror(char *msg);
+
+    Program * program;
 %}
 %union {
-    char    *sval;
-    int      ival;
-    double   dval;
-    Exp   *expVal;
+    const char * sval;
+    int ival;
+    double dval;
+    Exp * expVal;
+    Program * prog;
+    Declarator * decltr;
+    Pointer * ptr;
+    Decl * decl;
+    InitDeclarator * initDecltr;
+    InitDeclaratorList * initDeclList;
 }
 
 %token SIZEOF FUNC VAR STRUCT IF ELSE WHILE FOR CONTINUE BREAK RETURN
@@ -23,37 +31,43 @@
 %token <ival> INT_LITERAL BOOLEAN_LITERAL
 %token <dval> DOUBLE_LITERAL
 
+%type <prog> Program
+%type <decltr> Declarator Direct_Declarator
+%type <ptr> Pointer
+%type <initDecltr> Init_Declarator
+%type <initDeclList> Init_Declarator_List
+%type <decl> Declaration External_Decl
+
 
 %type <sval> Assign_Op Unary_Op
-%type <expVal> Program Translation_Unit External_Decl Declaration Declaration_List
-%type <expVal> Init_Declarator Init_Declarator_List Declarator Direct_Declarator Pointer
 %type <expVal> Primary_Exp List_Literal Primary_Exp_List Exp Assign_Exp Conditional_Exp 
 %type <expVal> Unary_Exp Logical_Or_Exp Logical_And_Exp Equal_Exp Rational_Exp Addtive_Exp Multiple_Exp Postfix_Exp 
-%type <expVal> Func_Definition Func_Declarator Identifier_List
+%type <expVal> Func_Definition Func_Declarator Identifier_List Declaration_List
 %type <expVal> Statement Compound_Statement Exp_Statement Selection_Statement Iteration_Statement Jump_Statement Statement_List 
 
 %nonassoc IFX
 %nonassoc ELSE
 
-%start Program
+%start Print
 %%
 
 // part1: 프로그램 선언
 
 // 됨
-Program
-    : Translation_Unit                                  { $$ = $1; printTree($$); }
+
+Print   
+    : Program     { $1 -> printProgram(0); }
     ;
 
-Translation_Unit
-    : External_Decl                                     { $$ = $1; }
-    | Translation_Unit External_Decl                    { $$ = new MultiExp($1, $2); }
+Program
+    : External_Decl                                     { $$ = new Program($1); }
+    | Program External_Decl                             { $1 -> addDecl($2); $$ = $1; }
     ;
 
 // 됨
 External_Decl
     : Declaration                                       { $$ = $1; }
-    | Func_Definition                                   { $$ = $1; }
+    //| Func_Definition                                   { $$ = $1; }
     ;
 
 
@@ -64,10 +78,9 @@ External_Decl
 
 // part2: 변수 선언
 
-// 됨
 Declaration 
-    : Declaration_Specifiers ';'                        { $$ = new UExp("var", NULL, TRUE); }
-    | Declaration_Specifiers Init_Declarator_List ';'   { $$ = new UExp("var", $2, TRUE); }
+    : Declaration_Specifiers ';'                        { $$ = new VarDecl(); }
+    | Declaration_Specifiers Init_Declarator_List ';'   { $$ = new VarDecl($2); }
     ;
 
 // 됨 (struct 빠짐)
@@ -75,33 +88,28 @@ Declaration_Specifiers
     : VAR
     ;
 
-// 됨
 Init_Declarator_List
-    : Init_Declarator                               { $$ = $1; }
-    | Init_Declarator_List ',' Init_Declarator      { $$ = new BExp(",", $1, $3); }
+    : Init_Declarator                               { $$ = new InitDeclaratorList($1); }
+    | Init_Declarator_List ',' Init_Declarator      { $1 -> addInitDeclarator($3); $$ = $1; }
     ;
 
-// 됨
 Init_Declarator
-    : Declarator                            { $$ = $1; }
-    | Declarator '=' Assign_Exp             { $$ = new BExp("=", $1, $3); }
+    : Declarator                            { $$ = new InitDeclarator($1); }
+    | Declarator '=' Assign_Exp             { $$ = new InitDeclarator($1, $3); }
     ;
-
-// 됨
+ 
 Declarator
-    : Pointer Direct_Declarator             { $$ = new UExp("*", $2, TRUE); }
+    : Pointer Direct_Declarator             { $$ = new PointerDeclarator($1, $2); }
     | Direct_Declarator                     { $$ = $1; }
     ;
 
-// 됨
 Pointer
-    : '*'                                   { $$ = new UExp("*", NULL, TRUE); }
-    | '*' Pointer                           { $$ = new UExp("*", $2, TRUE); }
+    : '*'                                   { $$ = new Pointer(); }
+    | '*' Pointer                           { $2 -> addPointerCount(); $$ = $2; }
     ;
  
-// 됨
 Direct_Declarator
-    : IDENTIFIER                            { $$ = new Id($1); }
+    : IDENTIFIER                            { $$ = new IdentifierDeclarator(new Id($1)); }
     | '(' Declarator ')'                    { $$ = $2; }
     ;
 
@@ -113,7 +121,6 @@ Direct_Declarator
 
 // part3: 각종 Exp 정리
 
-// 됨
 Primary_Exp
     : IDENTIFIER                            { $$ = new Id($1); }
     | INT_LITERAL                           { $$ = new IntNum($1); }
@@ -121,39 +128,35 @@ Primary_Exp
     | STRING_LITERAL                        { $$ = new Str($1); }
     | BOOLEAN_LITERAL                       { $$ = new Bool($1); }
     | List_Literal                          { $$ = $1; }
+    | '(' Exp ')'                           { $$ = $2; }
     ;
 
-// 됨
 List_Literal
-    : '[' Primary_Exp_List ']'              { $$ = new ECMAList($2); }
+    : '[' Primary_Exp_List ']'              { $$ = $2; }
     | '[' ']'                               { $$ = new ECMAList(); }
     ;
 
-// 됨
 Primary_Exp_List
-    : Primary_Exp                           { $$ = $1; }
-    | Primary_Exp_List ',' Primary_Exp      { $$ = new BExp(",", $1, $3); }
+    : Primary_Exp                           { $$ = new ECMAList($1); }
+    | Primary_Exp_List ',' Primary_Exp      { ECMAList * list = (ECMAList *)$1; list -> addExp($3); $$ = $1; }
     ;
 
-// 됨
 Exp
     : Assign_Exp                            { $$ = $1; }
     | Exp ',' Assign_Exp                    { $$ = new BExp(",", $1, $3); }
     ;
 
-// 됨
 Assign_Exp
     : Conditional_Exp                       { $$ = $1; }
     | Unary_Exp Assign_Op Assign_Exp        { $$ = new BExp($2, $1, $3); }
 
-// 됨
 Assign_Op   
-    : '='                                   { $$ = $1; }
-    | ADD_ASSIGN                            { $$ = $1; }
-    | SUB_ASSIGN                            { $$ = $1; }
-    | MUL_ASSIGN                            { $$ = $1; }
-    | DIV_ASSIGN                            { $$ = $1; }
-    | MOD_ASSIGN                            { $$ = $1; }
+    : '='                                   { $$ = "="; }
+    | ADD_ASSIGN                            { $$ = "+="; }
+    | SUB_ASSIGN                            { $$ = "-="; }
+    | MUL_ASSIGN                            { $$ = "*="; }
+    | DIV_ASSIGN                            { $$ = "/="; }
+    | MOD_ASSIGN                            { $$ = "%="; }
     ;
 
 // 됨
@@ -162,26 +165,22 @@ Conditional_Exp
     | Logical_Or_Exp '?' Exp ':' Conditional_Exp    
     ;
 
-// 됨
 Logical_Or_Exp    
     : Logical_And_Exp                               { $$ = $1; }
     | Logical_Or_Exp OR_OP Logical_And_Exp          { $$ = new BExp("||", $1, $3); }
     ;
 
-// 됨
 Logical_And_Exp     
     : Equal_Exp                                     { $$ = $1; }
     | Logical_And_Exp AND_OP Equal_Exp              { $$ = new BExp("&&", $1, $3); }
     ;
 
-// 됨
 Equal_Exp          
     : Rational_Exp                                  { $$ = $1; }
     | Equal_Exp EQ_OP Rational_Exp                  { $$ = new BExp("==", $1, $3); }
     | Equal_Exp NE_OP Rational_Exp                  { $$ = new BExp("!=", $1, $3); }
     ;
 
-// 됨
 Rational_Exp    
     : Addtive_Exp                                   { $$ = $1; }
     | Rational_Exp '<' Addtive_Exp                  { $$ = new BExp("<", $1, $3); }
@@ -190,14 +189,12 @@ Rational_Exp
     | Rational_Exp GE_OP Addtive_Exp                { $$ = new BExp(">=", $1, $3); }
     ;
 
-// 됨
 Addtive_Exp     
     : Multiple_Exp                                  { $$ = $1; }
     | Addtive_Exp '+' Multiple_Exp                  { $$ = new BExp("+", $1, $3); }
     | Addtive_Exp '-' Multiple_Exp                  { $$ = new BExp("-", $1, $3); }
     ;
 
-// 됨
 Multiple_Exp
     : Unary_Exp                                     { $$ = $1; }
     | Multiple_Exp '*' Unary_Exp                    { $$ = new BExp("*", $1, $3); }    
@@ -205,7 +202,6 @@ Multiple_Exp
     | Multiple_Exp '%' Unary_Exp                    { $$ = new BExp("%", $1, $3); }    
     ;
 
-// 됨
 Unary_Exp
     : Postfix_Exp                                   { $$ = $1; }
     | INC_OP Unary_Exp                              { $$ = new UExp("++", $2, TRUE); }
@@ -214,19 +210,17 @@ Unary_Exp
     | SIZEOF Unary_Exp                              { $$ = new UExp("sizeof", $2, TRUE); }
     ;
 
-// 됨
 Unary_Op
-    : '&'                                           { $$ = $1; }
-    | '*'                                           { $$ = $1; }
-    | '+'                                           { $$ = $1; }
-    | '-'                                           { $$ = $1; }
-    | '!'                                           { $$ = $1; }
+    : '&'                                           { $$ = "&"; }
+    | '*'                                           { $$ = "*"; }
+    | '+'                                           { $$ = "+"; }
+    | '-'                                           { $$ = "-"; }
+    | '!'                                           { $$ = "!"; }
     ;
 
-// 됨
 Postfix_Exp
     : Primary_Exp                                   { $$ = $1; }
-    | Postfix_Exp '[' Exp ']'                       { $$ = new UExp("[]", $1, FALSE); }
+    | Postfix_Exp '[' Exp ']'                       { $$ = new BExp("[]", $1, $3); }
     | Postfix_Exp PTR_OP IDENTIFIER                 { $$ = new BExp("->", $1, new Id($3)); }
     | Postfix_Exp INC_OP                            { $$ = new UExp("++", $1, FALSE); }
     | Postfix_Exp DEC_OP                            { $$ = new UExp("--", $1, FALSE); }
@@ -257,6 +251,9 @@ Identifier_List
     : IDENTIFIER                                    { $$ = new Id($1); }
     | Identifier_List ',' IDENTIFIER                { $$ = new BExp(",", $1, new Id($3)); }
     ;
+
+
+
 
 
 
@@ -319,6 +316,8 @@ Jump_Statement
     | RETURN ';'                                                { $$ = new JumpStatement("return", NULL); }
     | RETURN Exp ';'                                            { $$ = new JumpStatement("return", $2); }
     ;
+
+
 
 %%
 

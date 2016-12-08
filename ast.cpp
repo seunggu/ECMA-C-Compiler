@@ -6,74 +6,126 @@
 const int INDENT_LEVEL = 4;
 void indent(int n);
 
-
 // Program 클래스
-Program::Program(TransUnit * unit) : transUnit(unit) { }
-
-void Program::printProgram(int lmargin) {
-    cout << "Program" << endl;
-    transUnit -> printTransUnit(lmargin + INDENT_LEVEL);
+Program::Program(Decl * decl) {
+    decls.push_back(decl);
 }
 
-// TransUnit 클래스
-TransUnit::TransUnit() { }
+void Program::printProgram(int lmargin) {
+    int declCount = (int)decls.size();
 
-void TransUnit::printTransUnit(int lmargin) {
-    int countOfDecls = (int)decls.size();
-    cout << "Decls" << endl;
+    indent(lmargin);
+    cout << "Program" << endl;
 
-    for (int i = 0; i < countOfDecls; i++) {
-        decls[i] -> printDecl(lmargin + INDENT_LEVEL);
+    if (declCount > 0) {
+        for (int i = 0; i < declCount; i++) {
+            decls[i] -> printDecl(lmargin + INDENT_LEVEL);
+        }
     }
+}
+
+void Program::addDecl(Decl * decl) {
+    decls.push_back(decl);
 }
 
 // VarDecl 클래스
-VarDecl::VarDecl() : decltrInitList(NULL) { }
+VarDecl::VarDecl() : initDecltrList(NULL) { }
 
-VarDecl::VarDecl(DecltrInitList *list) : decltrInitList(list) { }
+VarDecl::VarDecl(InitDeclaratorList * list) : initDecltrList(list) { }
 
 void VarDecl::printDecl(int lmargin) {
-    cout << "VarDecl" << endl;
+    cout << "Variable Declaration" << endl;
 
-    if (decltrInitList != NULL) {
-        //decltrInitList
-    }
-}
-
-// DecltrInitList 클래스
-void DecltrInitList::pushBack(DecltrInit * init) {
-    decltrInits.push_back(init);
-}
-
-void DecltrInitList::printDecltrInitList(int lmargin) {
-    int countOfDecls = (int)decltrInits.size();
-    cout << "Declator Init List" << endl;
-
-    for (int i = 0; i < countOfDecls; i++) {
-        //decltrInits[i] -> printDecl(lmargin + INDENT_LEVEL);
+    if (initDecltrList != NULL) {
+        initDecltrList -> printInitDeclaratorList(lmargin + INDENT_LEVEL);
     }
 }
 
 
-// Exp 클래스
-void Exp::print(int lmargin) {
-    printExp(lmargin);
+
+
+
+
+
+
+// Pointer 클래스
+Pointer::Pointer() : count(1) { }
+
+void Pointer::addPointerCount() {
+    count++;
 }
 
-void Exp::printExp(int lmargin) {
-
-}
-
-// Multi Exp 클래스
-MultiExp::MultiExp(Exp *l, Exp *r) : left(l), right(r) { }
-
-void MultiExp::printExp(int lmargin) {
+void Pointer::printPointer(int lmargin) {
     indent(lmargin);
-    left -> printExp(lmargin);
-    right -> printExp(lmargin);
+
+    for (int i = 0; i < count; i++) {
+        cout << "*";
+        cout << endl;
+    }
 }
 
-// ID 리터럴 클래스
+// Init Declarator List 클래스
+InitDeclaratorList::InitDeclaratorList() { }
+
+InitDeclaratorList::InitDeclaratorList(InitDeclarator * initDecltr) {
+    initDeclatrators.push_back(initDecltr);
+}
+
+void InitDeclaratorList::printInitDeclaratorList(int lmargin) {
+    int initDecltrCount = (int)initDeclatrators.size();
+
+    indent(lmargin);
+    cout << "Init Declarator List" << endl;
+
+    if (initDecltrCount > 0) {
+        for (int i = 0; i < initDecltrCount; i++) {
+            initDeclatrators[i] -> printInitDeclarator(lmargin + INDENT_LEVEL);
+        }
+    }
+}
+
+void InitDeclaratorList::addInitDeclarator(InitDeclarator * initDecltr) {
+    initDeclatrators.push_back(initDecltr);
+}
+
+// Init Declarator 클래스
+InitDeclarator::InitDeclarator(Declarator * decltr) : declarator(decltr) {
+    exp = NULL;
+}
+
+InitDeclarator::InitDeclarator(Declarator * decltr, Exp * e) : declarator(decltr), exp(e) { }
+
+void InitDeclarator::printInitDeclarator(int lmargin) {
+    indent(lmargin);
+    cout << "Init Declarator" << endl;
+
+    declarator -> printDeclarator(lmargin + INDENT_LEVEL);
+    exp -> printExp(lmargin + INDENT_LEVEL);
+}
+
+// Pointer Declarator 클래스
+PointerDeclarator::PointerDeclarator(Pointer * ptr, Declarator * decl) : pointer(ptr), declarator(decl) { }
+
+void PointerDeclarator::printDeclarator(int lmargin) {
+    indent(lmargin);
+    cout << "Pointer Declarator" << endl;
+
+    pointer -> printPointer(lmargin + INDENT_LEVEL);
+    declarator -> printDeclarator(lmargin + INDENT_LEVEL);
+}
+
+// Identifier Declarator 클래스
+IdentifierDeclarator::IdentifierDeclarator(Id * id) : identifier(id) { }
+
+void IdentifierDeclarator::printDeclarator(int lmargin) {
+    indent(lmargin);
+    cout << "Identifier Declarator" << endl;
+
+    identifier -> printExp(lmargin + INDENT_LEVEL);
+}
+
+
+// Identifier 클래스
 Id::Id(const char * n) {
     name = (char*)malloc(strlen(n));
     strcpy(name, n);
@@ -100,7 +152,7 @@ void DbNum::printExp(int lmargin) {
     printf("Double(%lf) \n", val);
 }
 
-// 정수 숫자 리터럴 클래스
+// 불리언 리터럴 클래스
 Bool::Bool(int val) : val(val) { }
 
 void Bool::printExp(int lmargin) {
@@ -116,19 +168,32 @@ Str::Str(const char * s) {
 
 void Str::printExp(int lmargin) {
     indent(lmargin);
-    printf("Str(%s) \n", str);
+    printf("String(%s) \n", str);
 }
 
 // 리스트 리터럴 클래스
-ECMAList::ECMAList() : val(NULL) { }
-ECMAList::ECMAList(Exp * val) : val(val) { }
+ECMAList::ECMAList() { }
 
-void ECMAList::printExp(int lmargin) {
-    indent(lmargin);
-    printf("List() \n");
-    val -> printExp(lmargin + INDENT_LEVEL);
+ECMAList::ECMAList(Exp * val) {
+    expList.push_back(val);
 }
 
+void ECMAList::printExp(int lmargin) {
+    int expCount = (int)expList.size();
+
+    indent(lmargin);
+    printf("List \n");
+
+    if (expCount > 0) {
+        for (int i = 0; i < expCount; i++) {
+            expList[i] -> printExp(lmargin + INDENT_LEVEL);
+        }
+    }
+}
+
+void ECMAList::addExp(Exp * val) {
+    expList.push_back(val);
+}
 
 // 이항 연산자 클래스
 BExp::BExp(const char * o, Exp *l, Exp *r) : left(l), right(r) {
@@ -302,13 +367,6 @@ void JumpStatement::printExp(int lmargin) {
     }
 }
 
-
-// 헬퍼 메서드
-void printTree(Exp * root)
-{
-    if (root == NULL) return;
-    root -> print(0);
-}
 
 void indent(int n)
 {
