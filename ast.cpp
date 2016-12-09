@@ -437,12 +437,11 @@ void ForStatement::printStatement(int lmargin) {
     cout << "For Statement" << endl;
     initStatement -> printStatement(lmargin + INDENT_LEVEL);
     conditionStatement -> printStatement(lmargin + INDENT_LEVEL);
+    statement -> printStatement(lmargin + INDENT_LEVEL);
 
     if (lastExp != NULL) {
         lastExp -> printExp(lmargin + INDENT_LEVEL);
     }
-
-    statement -> printStatement(lmargin + INDENT_LEVEL);
 }
 
 // For In Statement 클래스
