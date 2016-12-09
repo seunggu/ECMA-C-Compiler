@@ -445,6 +445,18 @@ void ForStatement::printStatement(int lmargin) {
     statement -> printStatement(lmargin + INDENT_LEVEL);
 }
 
+// For In Statement 클래스
+ForInStatement::ForInStatement(Id * i, Exp * le, Statement * stmt)
+        : initVar(i), loopExp(le), statement(stmt) { }
+
+void ForInStatement::printStatement(int lmargin) {
+    indent(lmargin);
+    cout << "For In Statement" << endl;
+
+    initVar -> printExp(lmargin + INDENT_LEVEL);
+    loopExp -> printExp(lmargin + INDENT_LEVEL);
+    statement -> printStatement(lmargin + INDENT_LEVEL);
+}
 
 // Jump Statement 클래스
 JumpStatement::JumpStatement(const char * n, Exp * r) {

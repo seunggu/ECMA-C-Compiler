@@ -315,6 +315,17 @@ public:
     virtual void printStatement(int lmargin);
 };
 
+// For In Statement 클래스
+class ForInStatement : public Statement {
+public:
+    Id * initVar;
+    Exp * loopExp;
+    Statement * statement;
+
+    ForInStatement(Id * i, Exp * le, Statement * stmt);
+    virtual void printStatement(int lmargin);
+};
+
 // Jump Statement 클래스
 class JumpStatement : public Statement {
 public:

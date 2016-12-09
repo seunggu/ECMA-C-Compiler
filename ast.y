@@ -32,7 +32,7 @@
 
 
 
-%token SIZEOF FUNC VAR STRUCT IF ELSE WHILE FOR CONTINUE BREAK RETURN
+%token SIZEOF FUNC VAR IN STRUCT IF ELSE WHILE FOR CONTINUE BREAK RETURN
 %token INC_OP DEC_OP AND_OP OR_OP EQ_OP NE_OP PTR_OP 
 %token <sval> '=' '<' '>'  '&' '*' '+' '-' '!' LE_OP GE_OP 
 %token <sval> ADD_ASSIGN SUB_ASSIGN MUL_ASSIGN DIV_ASSIGN MOD_ASSIGN 
@@ -54,8 +54,8 @@
 %type <stmtList> Statement_List
 
 %type <sval> Assign_Op Unary_Op
-%type <expVal> Primary_Exp List_Literal Primary_Exp_List Exp Assign_Exp Conditional_Exp 
-%type <expVal> Unary_Exp Logical_Or_Exp Logical_And_Exp Equal_Exp Rational_Exp Addtive_Exp Multiple_Exp Postfix_Exp Func_Identifier
+%type <expVal> Primary_Exp List_Literal Primary_Exp_List Exp Assign_Exp Conditional_Exp  Identifier
+%type <expVal> Unary_Exp Logical_Or_Exp Logical_And_Exp Equal_Exp Rational_Exp Addtive_Exp Multiple_Exp Postfix_Exp
 
 
 %nonassoc IFX
@@ -65,8 +65,6 @@
 %%
 
 // part1: 프로그램 선언
-
-// 됨
 
 Print   
     : Program     { $1 -> printProgram(0); }
@@ -121,7 +119,7 @@ Pointer
     ;
  
 Direct_Declarator
-    : IDENTIFIER                            { $$ = new IdentifierDeclarator(new Id($1)); }
+    : Identifier                            { $$ = new IdentifierDeclarator((Id*)$1); }
     | '(' Declarator ')'                    { $$ = $2; }
     ;
 
@@ -134,7 +132,7 @@ Direct_Declarator
 // part3: 각종 Exp 정리
 
 Primary_Exp
-    : IDENTIFIER                            { $$ = new Id($1); }
+    : Identifier                            { $$ = $1; }
     | INT_LITERAL                           { $$ = new IntNum($1); }
     | DOUBLE_LITERAL                        { $$ = new DbNum($1); }
     | STRING_LITERAL                        { $$ = new Str($1); }
@@ -142,6 +140,9 @@ Primary_Exp
     | List_Literal                          { $$ = $1; }
     | '(' Exp ')'                           { $$ = $2; }
     ;
+
+Identifier
+    : IDENTIFIER                            { $$ = new Id($1); }
 
 List_Literal
     : '[' Primary_Exp_List ']'              { $$ = $2; }
@@ -233,7 +234,7 @@ Unary_Op
 Postfix_Exp
     : Primary_Exp                                   { $$ = $1; }
     | Postfix_Exp '[' Exp ']'                       { $$ = new BExp("[]", $1, $3); }
-    | Postfix_Exp PTR_OP IDENTIFIER                 { $$ = new BExp("->", $1, new Id($3)); }
+    | Postfix_Exp PTR_OP Identifier                 { $$ = new BExp("->", $1, $3); }
     | Postfix_Exp INC_OP                            { $$ = new UExp("++", $1, FALSE); }
     | Postfix_Exp DEC_OP                            { $$ = new UExp("--", $1, FALSE); }
     ;
@@ -250,17 +251,13 @@ Func_Declaration
     ;
 
 Func_Declarator
-    : Func_Identifier '(' Identifier_List ')'            { $$ = new FuncDeclarator((Id*)$1, $3); }
-    | Func_Identifier '(' ')'                            { $$ = new FuncDeclarator((Id*)$1, NULL); }
-    ;
-
-Func_Identifier
-    : IDENTIFIER                                    { $$ = new Id($1); }
+    : Identifier '(' Identifier_List ')'            { $$ = new FuncDeclarator((Id*)$1, $3); }
+    | Identifier '(' ')'                            { $$ = new FuncDeclarator((Id*)$1, NULL); }
     ;
 
 Identifier_List
-    : IDENTIFIER                                    { $$ = new IdentifierList(new Id($1)); }
-    | Identifier_List ',' IDENTIFIER                { $1 -> addId(new Id($3)); $$ = $1; }
+    : Identifier                                    { $$ = new IdentifierList((Id*)$1); }
+    | Identifier_List ',' Identifier                { $1 -> addId((Id*)$1); $$ = $1; }
     ;
 
 
@@ -311,6 +308,7 @@ Iteration_Statement
     : WHILE '(' Exp ')' Statement                               { $$ = new WhileStatement($3, $5); }
     | FOR '(' Exp_Statement Exp_Statement ')' Statement         { $$ = new ForStatement($3, $4, NULL, $6); }
     | FOR '(' Exp_Statement Exp_Statement Exp ')' Statement     { $$ = new ForStatement($3, $4, $5, $7); }
+    | FOR '(' VAR Identifier IN Exp ')' Statement               { $$ = new ForInStatement((Id*)$4, $6, $8); }
     ;
 
 Jump_Statement
