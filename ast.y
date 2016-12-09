@@ -10,6 +10,7 @@
 
     Program * program;
 %}
+
 %union {
     const char * sval;
     int ival;
@@ -19,9 +20,17 @@
     Declarator * decltr;
     Pointer * ptr;
     Decl * decl;
+    DeclList * declList;
     InitDeclarator * initDecltr;
     InitDeclaratorList * initDeclList;
+    IdentifierList * idList;
+    FuncDeclarator * funcDecltr;
+    FuncDecl * funcDecl;
+    Statement * stmt;
+    StatementList * stmtList;
 }
+
+
 
 %token SIZEOF FUNC VAR STRUCT IF ELSE WHILE FOR CONTINUE BREAK RETURN
 %token INC_OP DEC_OP AND_OP OR_OP EQ_OP NE_OP PTR_OP 
@@ -37,13 +46,17 @@
 %type <initDecltr> Init_Declarator
 %type <initDeclList> Init_Declarator_List
 %type <decl> Declaration External_Decl
-
+%type <declList> Declaration_List
+%type <idList> Identifier_List
+%type <funcDecltr> Func_Declarator
+%type <funcDecl> Func_Declaration
+%type <stmt> Statement Compound_Statement Exp_Statement Selection_Statement Iteration_Statement Jump_Statement 
+%type <stmtList> Statement_List
 
 %type <sval> Assign_Op Unary_Op
 %type <expVal> Primary_Exp List_Literal Primary_Exp_List Exp Assign_Exp Conditional_Exp 
-%type <expVal> Unary_Exp Logical_Or_Exp Logical_And_Exp Equal_Exp Rational_Exp Addtive_Exp Multiple_Exp Postfix_Exp 
-%type <expVal> Func_Definition Func_Declarator Identifier_List Declaration_List
-%type <expVal> Statement Compound_Statement Exp_Statement Selection_Statement Iteration_Statement Jump_Statement Statement_List 
+%type <expVal> Unary_Exp Logical_Or_Exp Logical_And_Exp Equal_Exp Rational_Exp Addtive_Exp Multiple_Exp Postfix_Exp Func_Identifier
+
 
 %nonassoc IFX
 %nonassoc ELSE
@@ -64,10 +77,9 @@ Program
     | Program External_Decl                             { $1 -> addDecl($2); $$ = $1; }
     ;
 
-// 됨
 External_Decl
     : Declaration                                       { $$ = $1; }
-    //| Func_Definition                                   { $$ = $1; }
+    | Func_Declaration                                  { $$ = $1; }
     ;
 
 
@@ -233,23 +245,22 @@ Postfix_Exp
 
 // part4. 함수 선언
 
-// 됨 !
-Func_Definition
-    : FUNC Func_Declarator Compound_Statement       { $$ = new Func($2, $3); }
+Func_Declaration
+    : FUNC Func_Declarator Compound_Statement       { $$ = new FuncDecl($2, $3); }
     ;
 
-// 됨 !
 Func_Declarator
-    : IDENTIFIER '(' Identifier_List ')'            { $$ = new FuncIdParam(new Id($1), $3); }
-    | IDENTIFIER '(' ')'                            { $$ = new FuncIdParam(new Id($1), NULL); }
-    | '(' Identifier_List ')'                       { $$ = new FuncIdParam(NULL, $2); }
-    | '(' ')'                                       { $$ = new FuncIdParam(NULL, NULL); }
+    : Func_Identifier '(' Identifier_List ')'            { $$ = new FuncDeclarator((Id*)$1, $3); }
+    | Func_Identifier '(' ')'                            { $$ = new FuncDeclarator((Id*)$1, NULL); }
     ;
 
-// 됨 !
-Identifier_List
+Func_Identifier
     : IDENTIFIER                                    { $$ = new Id($1); }
-    | Identifier_List ',' IDENTIFIER                { $$ = new BExp(",", $1, new Id($3)); }
+    ;
+
+Identifier_List
+    : IDENTIFIER                                    { $$ = new IdentifierList(new Id($1)); }
+    | Identifier_List ',' IDENTIFIER                { $1 -> addId(new Id($3)); $$ = $1; }
     ;
 
 
@@ -261,7 +272,6 @@ Identifier_List
 
 // part5. Statement 선언
 
-// 됨 
 Statement
     : Compound_Statement                            { $$ = $1; }
     | Exp_Statement                                 { $$ = $1; }
@@ -270,46 +280,39 @@ Statement
     | Jump_Statement                                { $$ = $1; }                           
     ;
 
-// 됨
 Compound_Statement
     : '{' '}'                                       { $$ = new CompoundStatement(NULL, NULL); }
     | '{' Statement_List '}'                        { $$ = new CompoundStatement($2, NULL); }
     | '{' Declaration_List '}'                      { $$ = new CompoundStatement(NULL, $2); }
-    | '{' Declaration_List Statement_List '}'       { $$ = new CompoundStatement($2, $3); }
+    | '{' Declaration_List Statement_List '}'       { $$ = new CompoundStatement($3, $2); }
     ;
 
-//  됨
 Declaration_List 
-    : Declaration                                   { $$ = $1; }
-    | Declaration_List Declaration                  { $$ = new MultiExp($1, $2); }
+    : Declaration                                   { $$ = new DeclList($1); }
+    | Declaration_List Declaration                  { $1 -> addDecl($2); $$ = $1; }
     ;
 
-// 됨
 Statement_List
-    : Statement                                     { $$ = $1; }
-    | Statement_List Statement                      { $$ = new MultiExp($1, $2); }
+    : Statement                                     { $$ = new StatementList($1); }
+    | Statement_List Statement                      { $1 -> addStatement($2); $$ = $1; }
     ;
 
-// 됨
 Exp_Statement
-    : ';'                                           { $$ = NULL; }
-    | Exp ';'                                       { $$ = $1; }
+    : ';'                                           { $$ = new ExpStatement(NULL); }
+    | Exp ';'                                       { $$ = new ExpStatement($1); }
     ;
 
-// 됨
 Selection_Statement
     : IF '(' Exp ')' Statement %prec IFX            { $$ = new IfStatement($3, $5, NULL); }
     | IF '(' Exp ')' Statement ELSE Statement       { $$ = new IfStatement($3, $5, $7); }
     ;
 
-// 됨
 Iteration_Statement
     : WHILE '(' Exp ')' Statement                               { $$ = new WhileStatement($3, $5); }
     | FOR '(' Exp_Statement Exp_Statement ')' Statement         { $$ = new ForStatement($3, $4, NULL, $6); }
     | FOR '(' Exp_Statement Exp_Statement Exp ')' Statement     { $$ = new ForStatement($3, $4, $5, $7); }
     ;
 
-// 됨
 Jump_Statement
     : CONTINUE ';'                                              { $$ = new JumpStatement("continue", NULL); }
     | BREAK ';'                                                 { $$ = new JumpStatement("break", NULL); }

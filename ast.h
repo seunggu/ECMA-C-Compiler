@@ -22,10 +22,21 @@ public:
     void addDecl(Decl * decl);
 };
 
-// Declaration (Abstract Class)
+
+// Declaration 클래스 (Abstract Class)
 class Decl {
 public:
     virtual void printDecl(int lmargin) = 0;
+};
+
+// Declaration List 클래스
+class DeclList {
+public:
+    vector<Decl*> decls;
+
+    DeclList(Decl * decl);
+    void printDeclList(int lmargin);
+    void addDecl(Decl * decl);
 };
 
 // VarDecl 클래스
@@ -193,77 +204,125 @@ public:
     virtual void printExp(int lmargin);
 };
 
-// 함수 Idenfier와 Parameter 클래스
-class FuncIdParam : public Exp {
-public:
-    Exp * idenifier;
-    Exp * parameterList;
 
-    FuncIdParam(Exp * id, Exp * param);
-    virtual void printExp(int lmargin);
+
+
+
+
+
+
+// Identifier List 클래스
+class IdentifierList {
+public:
+    vector<Id *> identifiers;
+
+    IdentifierList(Id * id);
+    void printIdList(int lmargin);
+    void addId(Id * id);
 };
 
-// 함수 클래스
-class Func : public Exp {
+// Function Declarator 클래스
+class FuncDeclarator {
 public:
-    Exp * funcIdParam;
-    Exp * statement;
+    Id * identifier;
+    IdentifierList * paramList;
 
-    Func(Exp * idParam, Exp * stmt);
-    virtual void printExp(int lmargin);
+    FuncDeclarator(Id * id, IdentifierList * pl);
+    void printDeclarator(int lmargin);
 };
 
-// If Statement 클래스
-class IfStatement : public Exp {
-public:
-    Exp * condition;
-    Exp * statement;
-    Exp * elseStatement;
+// Function Declaration 클래스
+class Statement;
 
-    IfStatement(Exp * c, Exp * s, Exp * e);
-    virtual void printExp(int lmargin);
+class FuncDecl : public Decl {
+public:
+    FuncDeclarator * funcDeclarator;
+    Statement * compoundStatement;
+
+    FuncDecl(FuncDeclarator * funcDecltr, Statement * cpStmt);;
+    virtual void printDecl(int lmargin);
 };
 
-// While Statement 클래스
-class WhileStatement : public Exp {
-public:
-    Exp * condition;
-    Exp * statement;
 
-    WhileStatement(Exp * c, Exp * s);
-    virtual void printExp(int lmargin);
+
+
+// Statment 클래스 (추상 클래스)
+class Statement {
+public:
+    virtual void printStatement(int lmargin) = 0;
 };
 
-// For Statement 클래스
-class ForStatement : public Exp {
+// Statment List 클래스
+class StatementList {
 public:
-    Exp * initStatement;
-    Exp * conditionStatement;
-    Exp * lastExp;
-    Exp * statement;
+    vector<Statement*> statements;
 
-    ForStatement(Exp * i, Exp * c, Exp * l, Exp * s);
-    virtual void printExp(int lmargin);
+    StatementList(Statement * stmt);
+    void printStatementList(int lmargin);
+    void addStatement(Statement * stmt);
 };
 
 // Compound Statement 클래스
-class CompoundStatement : public Exp {
+class CompoundStatement : public Statement {
 public:
-    Exp * statement;
-    Exp * declaration;
+    StatementList * statementList;
+    DeclList * declarationList;
 
-    CompoundStatement(Exp * stmt, Exp * decl);
-    virtual void printExp(int lmargin);
+    CompoundStatement(StatementList * stmtList, DeclList * declList);
+    virtual void printStatement(int lmargin);
+};
+
+// Expression Statement 클래스
+class ExpStatement : public Statement {
+public:
+    Exp * exp;
+
+    ExpStatement(Exp * e);
+    virtual void printStatement(int lmargin);
+};
+
+
+// If Statement 클래스
+class IfStatement : public Statement {
+public:
+    Exp * condition;
+    Statement * trueStatement;
+    Statement * elseStatement;
+
+    IfStatement(Exp * c, Statement * ts, Statement * es);
+    virtual void printStatement(int lmargin);
+};
+
+// While Statement 클래스
+class WhileStatement : public Statement {
+public:
+    Exp * condition;
+    Statement * statement;
+
+    WhileStatement(Exp * c, Statement * s);
+    virtual void printStatement(int lmargin);
+};
+
+// For Statement 클래스
+class ForStatement : public Statement {
+public:
+    Statement * initStatement;
+    Statement * conditionStatement;
+    Exp * lastExp;
+    Statement * statement;
+
+    ForStatement(Statement * i, Statement * c, Exp * l, Statement * s);
+    virtual void printStatement(int lmargin);
 };
 
 // Jump Statement 클래스
-class JumpStatement : public Exp {
+class JumpStatement : public Statement {
 public:
     char * name;
     Exp * returnExp;
 
     JumpStatement(const char * n, Exp * r);
-    virtual void printExp(int lmargin);
+    virtual void printStatement(int lmargin);
 };
 
 // traverse 함수

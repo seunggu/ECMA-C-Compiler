@@ -34,12 +34,36 @@ VarDecl::VarDecl() : initDecltrList(NULL) { }
 VarDecl::VarDecl(InitDeclaratorList * list) : initDecltrList(list) { }
 
 void VarDecl::printDecl(int lmargin) {
+    indent(lmargin);
     cout << "Variable Declaration" << endl;
 
     if (initDecltrList != NULL) {
         initDecltrList -> printInitDeclaratorList(lmargin + INDENT_LEVEL);
     }
 }
+
+// Declaration List 클래스
+DeclList::DeclList(Decl * decl) {
+    decls.push_back(decl);
+}
+
+void DeclList::printDeclList(int lmargin) {
+    int declCount = (int)decls.size();
+
+    indent(lmargin);
+    cout << "Declation List" << endl;
+
+    if (declCount > 0) {
+        for (int i = 0; i < declCount; i++) {
+            decls[i] -> printDecl(lmargin + INDENT_LEVEL);
+        }
+    }
+}
+
+void DeclList::addDecl(Decl *decl) {
+    decls.push_back(decl);
+}
+
 
 
 
@@ -220,90 +244,187 @@ void UExp::printExp(int lmargin) {
     exp -> printExp(lmargin + INDENT_LEVEL);
 }
 
-// 함수 Idenfier와 Parameter 클래스
-FuncIdParam::FuncIdParam(Exp * id, Exp * param) {
-    if (id == NULL && param == NULL) {
-        idenifier = NULL;
-        parameterList = NULL;
-    } else if (id == NULL) {
-        idenifier = NULL;
-        parameterList = param;
-    } else if (param == NULL) {
-        idenifier = id;
-        parameterList = NULL;
-    } else {
-        idenifier = id;
-        parameterList = param;
+
+
+
+
+
+
+
+// Identifier List 클래스
+IdentifierList::IdentifierList(Id * id) {
+    identifiers.push_back(id);
+}
+
+void IdentifierList::printIdList(int lmargin) {
+    int idCount = (int)identifiers.size();
+
+    indent(lmargin);
+    cout << "Id List" << endl;
+
+    if (idCount > 0) {
+        for (int i = 0; i < idCount; i++) {
+            identifiers[i] -> printExp(lmargin + INDENT_LEVEL);
+        }
     }
 }
 
-void FuncIdParam::printExp(int lmargin) {
-    indent(lmargin);
+void IdentifierList::addId(Id * id) {
+    identifiers.push_back(id);
+}
 
-    if (idenifier == NULL && parameterList == NULL) {
-        printf("Func No Identifier And No Parameter Info \n");
-    } else if (idenifier == NULL) {
-        printf("Func Parameter Info \n");
-        parameterList -> printExp(lmargin + INDENT_LEVEL);
-    } else if (parameterList == NULL) {
-        printf("Func Identifier Info \n");
-        idenifier -> printExp(lmargin + INDENT_LEVEL);;
+// Function Declarator 클래스
+FuncDeclarator::FuncDeclarator(Id * id, IdentifierList * pl) : identifier(id) {
+    if (pl == NULL) {
+        paramList = NULL;
     } else {
-        printf("Func Identifier And Parameter Info \n");
-        idenifier -> printExp(lmargin + INDENT_LEVEL);
-        parameterList -> printExp(lmargin + INDENT_LEVEL);
-    };
+        paramList = pl;
+    }
 }
 
-
-// 함수 클래스
-Func::Func(Exp * idParam, Exp * stmt) : funcIdParam(idParam), statement(stmt) { }
-
-void Func::printExp(int lmargin) {
+void FuncDeclarator::printDeclarator(int lmargin) {
     indent(lmargin);
-    printf("func \n");
-    funcIdParam -> printExp(lmargin + INDENT_LEVEL);
-    statement -> printExp(lmargin + INDENT_LEVEL);
+    cout << "Function Declarator" << endl;
+
+    identifier -> printExp(lmargin + INDENT_LEVEL);
+
+    if (paramList != NULL) {
+        paramList -> printIdList(lmargin + INDENT_LEVEL);
+    }
 }
 
-// If Statement
-IfStatement::IfStatement(Exp * c, Exp * s, Exp * e) : condition(c), statement(s) {
+// Function Declaration 클래스
+FuncDecl::FuncDecl(FuncDeclarator * funcDecltr, Statement * cpStmt)
+        : funcDeclarator(funcDecltr), compoundStatement(cpStmt) { }
+
+void FuncDecl::printDecl(int lmargin) {
+    indent(lmargin);
+    cout << "Function Declaration" << endl;
+
+    funcDeclarator -> printDeclarator(lmargin + INDENT_LEVEL);
+    compoundStatement -> printStatement(lmargin + INDENT_LEVEL);;
+}
+
+
+
+
+
+
+
+
+
+
+
+// Statement List 클래스
+StatementList::StatementList(Statement * stmt) {
+    statements.push_back(stmt);
+}
+
+void StatementList::printStatementList(int lmargin) {
+    int stmtCount = (int)statements.size();
+
+    indent(lmargin);
+    cout << "Statement List" << endl;
+
+    if (stmtCount > 0) {
+        for (int i = 0; i < stmtCount; i++) {
+            statements[i] -> printStatement(lmargin + INDENT_LEVEL);
+        }
+    }
+}
+
+void StatementList::addStatement(Statement * stmt) {
+    statements.push_back(stmt);
+}
+
+// Compound Statement 클래스
+CompoundStatement::CompoundStatement(StatementList * stmtList, DeclList * declList) {
+    if (stmtList == NULL && declList == NULL) {
+        statementList = NULL;
+        declarationList = NULL;
+    } else if (stmtList == NULL) {
+        statementList = NULL;
+        declarationList = declList;
+    } else if (declList == NULL) {
+        statementList = stmtList;
+        declarationList = NULL;
+    } else {
+        statementList = stmtList;
+        declarationList = declList;
+    }
+}
+
+void CompoundStatement::printStatement(int lmargin) {
+    indent(lmargin);
+    cout << "Compound Statement" << endl;
+
+    if (declarationList != NULL) {
+        declarationList -> printDeclList(lmargin + INDENT_LEVEL);
+    }
+
+    if (statementList != NULL) {
+        statementList -> printStatementList(lmargin + INDENT_LEVEL);
+    }
+}
+
+// Expression Statement 클래스
+ExpStatement::ExpStatement(Exp * e) {
     if (e == NULL) {
+        exp = NULL;
+    } else {
+        exp = e;
+    }
+}
+
+void ExpStatement::printStatement(int lmargin) {
+    indent(lmargin);
+    cout << "Exp Statement" << endl;
+
+    if (exp != NULL) {
+        exp -> printExp(lmargin + INDENT_LEVEL);
+    }
+}
+
+
+// If Statement 클래스
+IfStatement::IfStatement(Exp * c, Statement * ts, Statement * es) : condition(c), trueStatement(ts) {
+    if (es == NULL) {
         elseStatement = NULL;
     } else {
-        elseStatement = e;
+        elseStatement = es;
     }
 }
 
-void IfStatement::printExp(int lmargin) {
+void IfStatement::printStatement(int lmargin) {
     indent(lmargin);
 
     if (elseStatement != NULL) {
-        printf("If ELSE");
+        cout << "If ELSE Statement" << endl;
     } else {
-        printf("If");
+        cout << "If Statement" << endl;
     }
 
     condition -> printExp(lmargin + INDENT_LEVEL);
-    statement -> printExp(lmargin + INDENT_LEVEL);
+    trueStatement -> printStatement(lmargin + INDENT_LEVEL);
 
     if (elseStatement != NULL) {
-        elseStatement -> printExp(lmargin + INDENT_LEVEL);
+        elseStatement -> printStatement(lmargin + INDENT_LEVEL);
     }
 }
 
 // While Statement 클래스
-WhileStatement::WhileStatement(Exp * c, Exp * s) : condition(c), statement(s) { }
+WhileStatement::WhileStatement(Exp * c, Statement * s) : condition(c), statement(s) { }
 
-void WhileStatement::printExp(int lmargin) {
+void WhileStatement::printStatement(int lmargin) {
     indent(lmargin);
-    printf("While");
+    cout << "While Statement" << endl;
     condition -> printExp(lmargin + INDENT_LEVEL);
-    statement -> printExp(lmargin + INDENT_LEVEL);
+    statement -> printStatement(lmargin + INDENT_LEVEL);
 }
 
 // For Statement 클래스
-ForStatement::ForStatement(Exp *i, Exp *c, Exp *l, Exp *s) : initStatement(i), conditionStatement(c), statement(s) {
+ForStatement::ForStatement(Statement * i, Statement * c, Exp * l, Statement * s)
+        : initStatement(i), conditionStatement(c), statement(s) {
     if (l == NULL) {
         lastExp = NULL;
     } else {
@@ -311,40 +432,19 @@ ForStatement::ForStatement(Exp *i, Exp *c, Exp *l, Exp *s) : initStatement(i), c
     }
 }
 
-void ForStatement::printExp(int lmargin) {
+void ForStatement::printStatement(int lmargin) {
     indent(lmargin);
-    printf("For");
-    initStatement -> printExp(lmargin + INDENT_LEVEL);
-    conditionStatement -> printExp(lmargin + INDENT_LEVEL);
+    cout << "For Statement" << endl;
+    initStatement -> printStatement(lmargin + INDENT_LEVEL);
+    conditionStatement -> printStatement(lmargin + INDENT_LEVEL);
+
     if (lastExp != NULL) {
         lastExp -> printExp(lmargin + INDENT_LEVEL);
     }
-    statement -> printExp(lmargin + INDENT_LEVEL);
+
+    statement -> printStatement(lmargin + INDENT_LEVEL);
 }
 
-// Compound Statement 클래스
-CompoundStatement::CompoundStatement(Exp * stmt, Exp * decl) {
-    if (stmt == NULL && decl == NULL) {
-        statement = NULL;
-        declaration = NULL;
-    } else if (stmt == NULL) {
-        statement = NULL;
-        declaration = decl;
-    } else if (decl == NULL) {
-        statement = stmt;
-        declaration = NULL;
-    } else {
-        statement = stmt;
-        declaration = decl;
-    }
-}
-
-void CompoundStatement::printExp(int lmargin) {
-    indent(lmargin);
-    printf("Compound Statement \n");
-    statement -> printExp(lmargin + INDENT_LEVEL);
-    declaration -> printExp(lmargin + INDENT_LEVEL);
-}
 
 // Jump Statement 클래스
 JumpStatement::JumpStatement(const char * n, Exp * r) {
@@ -358,11 +458,11 @@ JumpStatement::JumpStatement(const char * n, Exp * r) {
     }
 }
 
-void JumpStatement::printExp(int lmargin) {
+void JumpStatement::printStatement(int lmargin) {
     indent(lmargin);
-    printf("JumpStatement(%s) \n", name);
+    cout << "JumpStatement(" << name << ")" << endl;
 
-    if (strcmp(name, "return") && returnExp != NULL) {
+    if ((strcmp(name, "return") == 0) && returnExp != NULL) {
         returnExp -> printExp(lmargin + INDENT_LEVEL);
     }
 }
