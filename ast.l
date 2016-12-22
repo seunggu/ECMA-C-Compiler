@@ -14,7 +14,6 @@ Identifier	{Letter}({Letter}|{Digit})*
 
 %%
 
-"sizeof"	{ return(SIZEOF); }
 "func"		{ return(FUNC); }
 "var"		{ return(VAR); }
 "in"		{ return(IN); }

@@ -1,14 +1,18 @@
 #ifndef __AST_H__
 #define __AST_H__
 
-#include <cstdio>
 #include <iostream>
+#include <fstream>
 #include <vector>
+
+#include "SymbolTable.h"
 
 using namespace std;
 
 #define TRUE 1
 #define FALSE 0
+
+class Id;
 
 // Program 클래스
 class Decl;
@@ -20,6 +24,8 @@ public:
     Program(Decl * decl);
     void printProgram(int lmargin);
     void addDecl(Decl * decl);
+    void code(ofstream &outFile, SymbolTable * globalSymbolTable);
+    void createSymbolTables(SymbolTable * globalST);
 };
 
 
@@ -27,6 +33,10 @@ public:
 class Decl {
 public:
     virtual void printDecl(int lmargin) = 0;
+    virtual void code(ofstream &outFile, SymbolTable * symbolTable) = 0;
+    virtual int getDeclAmount() = 0;
+    virtual void createSymbolTables(SymbolTable * symbolTable) = 0;
+    virtual typeKind getType() = 0;
 };
 
 // Declaration List 클래스
@@ -37,6 +47,8 @@ public:
     DeclList(Decl * decl);
     void printDeclList(int lmargin);
     void addDecl(Decl * decl);
+    void code(ofstream &outFile, SymbolTable * symbolTable);
+    void createSymbolTables(SymbolTable * symbolTable);
 };
 
 // VarDecl 클래스
@@ -49,19 +61,14 @@ public:
     VarDecl();
     VarDecl(InitDeclaratorList * list);
     virtual void printDecl(int lmargin);
+    virtual void code(ofstream &outFile, SymbolTable * symbolTable);
+    virtual int getDeclAmount();
+    virtual void createSymbolTables(SymbolTable * symbolTable);
+    virtual typeKind getType();
 };
 
 
 
-// Pointer 클래스
-class Pointer {
-public:
-    int count;
-
-    Pointer();
-    void addPointerCount();
-    void printPointer(int lmargin);
-};
 
 // Init Declarator List 클래스
 class InitDeclarator;
@@ -74,6 +81,8 @@ public:
     InitDeclaratorList(InitDeclarator * initDecltr);
     void printInitDeclaratorList(int lmargin);
     void addInitDeclarator(InitDeclarator * initDecltr);
+    void code(ofstream &outFile, SymbolTable * symbolTable);
+    void createSymbolTables(SymbolTable * symbolTable);
 };
 
 // Init Declarator 클래스
@@ -88,24 +97,27 @@ public:
     InitDeclarator(Declarator * decltr);
     InitDeclarator(Declarator * decltr, Exp * e);
     void printInitDeclarator(int lmargin);
+    void code(ofstream &outFile, SymbolTable * symbolTable);
+    void createSymbolTables(SymbolTable * symbolTable);
 };
 
 // Declarator 클래스
 class Declarator {
 public:
     virtual void printDeclarator(int lmargin) = 0;
+    virtual void code(ofstream &outFile, SymbolTable * symbolTable) = 0;
+    virtual Id* getIdentifier() = 0;
 };
 
 // Pointer Declarator 클래스
-class Pointer;
-
 class PointerDeclarator : public Declarator {
 public:
-    Pointer * pointer;
     Declarator * declarator;
 
-    PointerDeclarator(Pointer * ptr, Declarator * decl);
+    PointerDeclarator(Declarator * decl);
     virtual void printDeclarator(int lmargin);
+    virtual void code(ofstream &outFile, SymbolTable * symbolTable);
+    virtual Id* getIdentifier();
 };
 
 // Identifier Declarator 클래스
@@ -117,21 +129,45 @@ public:
 
     IdentifierDeclarator(Id * id);
     virtual void printDeclarator(int lmargin);
+    virtual void code(ofstream &outFile, SymbolTable * symbolTable);
+    virtual Id* getIdentifier();
 };
+
+
+
+
+
+
+
+
 
 // Exp (추상 클래스)
 class Exp {
 public:
     virtual void printExp(int lmargin) = 0;
+    virtual TypeInfo* codeR(ofstream &outFile, SymbolTable * symbolTable) = 0;
+};
+
+// Exp List 클래스
+class ExpList : public Exp {
+public:
+    vector<Exp*> expList;
+
+    ExpList(Exp * e);
+    virtual void printExp(int lmargin);
+    virtual TypeInfo* codeR(ofstream &outFile, SymbolTable * symbolTable);
+    void addExp(Exp * e);
 };
 
 // Identifier 클래스
 class Id : public Exp {
 public:
-    char * name;
+    string name;
 
-    Id(const char * n);
+    Id(string n);
     virtual void printExp(int lmargin);
+    virtual TypeInfo* codeR(ofstream &outFile, SymbolTable * symbolTable);
+    SymbolEntry* codeL(ofstream &outFile, SymbolTable * symbolTable);
 };
 
 
@@ -142,6 +178,7 @@ public:
 
     IntNum(int val);
     virtual void printExp(int lmargin);
+    virtual TypeInfo* codeR(ofstream &outFile, SymbolTable * symbolTable);
 };
 
 // 실수 숫자 리터럴 클래스
@@ -151,6 +188,7 @@ public:
 
     DbNum(double val);
     virtual void printExp(int lmargin);
+    virtual TypeInfo* codeR(ofstream &outFile, SymbolTable * symbolTable);
 };
 
 // Boolean 리터럴 클래스
@@ -160,15 +198,17 @@ public:
 
     Bool(int val);
     virtual void printExp(int lmargin);
+    virtual TypeInfo* codeR(ofstream &outFile, SymbolTable * symbolTable);
 };
 
 // 문자 리터럴 클래스
 class Str : public Exp {
 public:
-  char * str;
+  string str;
 
-    Str(const char * str);
+    Str(string str);
     virtual void printExp(int lmargin);
+    virtual TypeInfo* codeR(ofstream &outFile, SymbolTable * symbolTable);
 };
 
 // 리스트 리터럴 클래스
@@ -180,28 +220,31 @@ public:
     ECMAList(Exp * val);
     virtual void printExp(int lmargin);
     void addExp(Exp * val);
+    virtual TypeInfo* codeR(ofstream &outFile, SymbolTable * symbolTable);
 };
 
 // 이항 연산자
 class BExp : public Exp {
 public:
-    char * op;
+    string op;
     Exp * left;
     Exp * right;
 
-    BExp(const char * o, Exp * l, Exp * r);
+    BExp(string o, Exp * l, Exp * r);
     virtual void printExp(int lmargin);
+    virtual TypeInfo* codeR(ofstream &outFile, SymbolTable * symbolTable);
 };
 
 // 단항 연산자
 class UExp : public Exp {
 public:
     int isPre; // PreUnary이면 TRUE, PostUnary이면 FALSE
-    char * op;
+    string op;
     Exp * exp;
 
-    UExp(const char * o, Exp * e, int isPre);
+    UExp(string o, Exp * e, int isPre);
     virtual void printExp(int lmargin);
+    virtual TypeInfo* codeR(ofstream &outFile, SymbolTable * symbolTable);
 };
 
 
@@ -219,6 +262,8 @@ public:
     IdentifierList(Id * id);
     void printIdList(int lmargin);
     void addId(Id * id);
+    void createSymbolTables(SymbolTable * symbolTable);
+    int getAmount();
 };
 
 // Function Declarator 클래스
@@ -229,6 +274,8 @@ public:
 
     FuncDeclarator(Id * id, IdentifierList * pl);
     void printDeclarator(int lmargin);
+    void code(ofstream &outFile, SymbolTable * symbolTable);
+    void createSymbolTables(SymbolTable * symbolTable);
 };
 
 // Function Declaration 클래스
@@ -239,8 +286,12 @@ public:
     FuncDeclarator * funcDeclarator;
     Statement * compoundStatement;
 
-    FuncDecl(FuncDeclarator * funcDecltr, Statement * cpStmt);;
+    FuncDecl(FuncDeclarator * funcDecltr, Statement * cpStmt);
     virtual void printDecl(int lmargin);
+    virtual void code(ofstream &outFile, SymbolTable * symbolTable);
+    virtual int getDeclAmount();
+    virtual void createSymbolTables(SymbolTable * symbolTable);
+    virtual typeKind getType();
 };
 
 
@@ -250,6 +301,7 @@ public:
 class Statement {
 public:
     virtual void printStatement(int lmargin) = 0;
+    virtual void code(ofstream &outFile, SymbolTable * symbolTable) = 0;
 };
 
 // Statment List 클래스
@@ -260,6 +312,7 @@ public:
     StatementList(Statement * stmt);
     void printStatementList(int lmargin);
     void addStatement(Statement * stmt);
+    void code(ofstream &outFile, SymbolTable * symbolTable);
 };
 
 // Compound Statement 클래스
@@ -269,7 +322,11 @@ public:
     DeclList * declarationList;
 
     CompoundStatement(StatementList * stmtList, DeclList * declList);
+
     virtual void printStatement(int lmargin);
+    virtual void code(ofstream &outFile, SymbolTable * symbolTable);
+    void createSymbolTable(SymbolTable * symbolTable);
+    int getDeclAmount();
 };
 
 // Expression Statement 클래스
@@ -279,6 +336,7 @@ public:
 
     ExpStatement(Exp * e);
     virtual void printStatement(int lmargin);
+    virtual void code(ofstream &outFile, SymbolTable * symbolTable);
 };
 
 
@@ -291,6 +349,7 @@ public:
 
     IfStatement(Exp * c, Statement * ts, Statement * es);
     virtual void printStatement(int lmargin);
+    virtual void code(ofstream &outFile, SymbolTable * symbolTable);
 };
 
 // While Statement 클래스
@@ -301,6 +360,7 @@ public:
 
     WhileStatement(Exp * c, Statement * s);
     virtual void printStatement(int lmargin);
+    virtual void code(ofstream &outFile, SymbolTable * symbolTable);
 };
 
 // For Statement 클래스
@@ -313,6 +373,7 @@ public:
 
     ForStatement(Statement * i, Statement * c, Exp * l, Statement * s);
     virtual void printStatement(int lmargin);
+    virtual void code(ofstream &outFile, SymbolTable * symbolTable);
 };
 
 // For In Statement 클래스
@@ -324,16 +385,18 @@ public:
 
     ForInStatement(Id * i, Exp * le, Statement * stmt);
     virtual void printStatement(int lmargin);
+    virtual void code(ofstream &outFile, SymbolTable * symbolTable);
 };
 
 // Jump Statement 클래스
 class JumpStatement : public Statement {
 public:
-    char * name;
+    string name;
     Exp * returnExp;
 
-    JumpStatement(const char * n, Exp * r);
+    JumpStatement(string n, Exp * r);
     virtual void printStatement(int lmargin);
+    virtual void code(ofstream &outFile, SymbolTable * symbolTable);
 };
 
 // traverse 함수

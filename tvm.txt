@@ -1,0 +1,36 @@
+	ssp 5
+	lda 1
+	ldc 3
+	sto
+	lda 2
+	ldc 4
+	sto
+	lda 3
+	new 3
+	ldc 1
+	sti 0
+	ldc 2
+	sti 1
+	ldc 3
+	sti 2
+	sto
+	mst
+	cup 0 main
+getIndex1: 	ssp 4
+	lda 4
+	ldc 3
+	ind
+	ldc 0
+	add
+	ind
+	sto 0
+	retf
+main: 	ssp 4
+	lda 4
+	mst
+	cup 0 getIndex1
+	sto
+	ldc 3
+	lda 4
+	ind
+	sto

@@ -1,6 +1,11 @@
 %{  // Bison input
     #include <stdio.h>
+    #include <iostream>
+    #include <fstream>
+
     #include "ast.h"
+
+    using namespace std;
 
     #define TRUE 1
     #define FALSE 0
@@ -9,6 +14,8 @@
     int yyerror(char *msg);
 
     Program * program;
+    ofstream out("tvm.txt");
+    SymbolTable * globalSymbolTable = new SymbolTable();
 %}
 
 %union {
@@ -18,7 +25,6 @@
     Exp * expVal;
     Program * prog;
     Declarator * decltr;
-    Pointer * ptr;
     Decl * decl;
     DeclList * declList;
     InitDeclarator * initDecltr;
@@ -30,8 +36,6 @@
     StatementList * stmtList;
 }
 
-
-
 %token SIZEOF FUNC VAR IN STRUCT IF ELSE WHILE FOR CONTINUE BREAK RETURN
 %token INC_OP DEC_OP AND_OP OR_OP EQ_OP NE_OP PTR_OP 
 %token <sval> '=' '<' '>'  '&' '*' '+' '-' '!' LE_OP GE_OP 
@@ -42,7 +46,6 @@
 
 %type <prog> Program
 %type <decltr> Declarator Direct_Declarator
-%type <ptr> Pointer
 %type <initDecltr> Init_Declarator
 %type <initDeclList> Init_Declarator_List
 %type <decl> Declaration External_Decl
@@ -54,20 +57,20 @@
 %type <stmtList> Statement_List
 
 %type <sval> Assign_Op Unary_Op
-%type <expVal> Primary_Exp List_Literal Primary_Exp_List Exp Assign_Exp Conditional_Exp  Identifier
+%type <expVal> Primary_Exp List_Literal Primary_Exp_List Exp Assign_Exp Conditional_Exp Identifier
 %type <expVal> Unary_Exp Logical_Or_Exp Logical_And_Exp Equal_Exp Rational_Exp Addtive_Exp Multiple_Exp Postfix_Exp
 
 
 %nonassoc IFX
 %nonassoc ELSE
 
-%start Print
+%start CodeGenerate
 %%
 
 // part1: 프로그램 선언
 
-Print   
-    : Program     { $1 -> printProgram(0); }
+CodeGenerate   
+    : Program                                           { $1 -> printProgram(0); cout << "complete print" << endl; $1 -> createSymbolTables(globalSymbolTable); cout << "complete symbolTable" << endl; $1 -> code(out, globalSymbolTable); }
     ;
 
 Program
@@ -79,8 +82,6 @@ External_Decl
     : Declaration                                       { $$ = $1; }
     | Func_Declaration                                  { $$ = $1; }
     ;
-
-
 
 
 
@@ -109,14 +110,12 @@ Init_Declarator
     ;
  
 Declarator
-    : Pointer Direct_Declarator             { $$ = new PointerDeclarator($1, $2); }
+    : Pointer Direct_Declarator             { $$ = new PointerDeclarator($2); }
     | Direct_Declarator                     { $$ = $1; }
     ;
 
 Pointer
-    : '*'                                   { $$ = new Pointer(); }
-    | '*' Pointer                           { $2 -> addPointerCount(); $$ = $2; }
-    ;
+    : '*'                                   
  
 Direct_Declarator
     : Identifier                            { $$ = new IdentifierDeclarator((Id*)$1); }
@@ -155,8 +154,8 @@ Primary_Exp_List
     ;
 
 Exp
-    : Assign_Exp                            { $$ = $1; }
-    | Exp ',' Assign_Exp                    { $$ = new BExp(",", $1, $3); }
+    : Assign_Exp                            { $$ = new ExpList($1); }
+    | Exp ',' Assign_Exp                    { ((ExpList *)$1) -> addExp($3); $$ = $1; }
     ;
 
 Assign_Exp
@@ -172,7 +171,6 @@ Assign_Op
     | MOD_ASSIGN                            { $$ = "%="; }
     ;
 
-// 됨
 Conditional_Exp    
     : Logical_Or_Exp                                { $$ = $1; } 
     | Logical_Or_Exp '?' Exp ':' Conditional_Exp    
@@ -220,7 +218,6 @@ Unary_Exp
     | INC_OP Unary_Exp                              { $$ = new UExp("++", $2, TRUE); }
     | DEC_OP Unary_Exp                              { $$ = new UExp("--", $2, TRUE); }
     | Unary_Op Unary_Exp                            { $$ = new UExp($1, $2, TRUE); }
-    | SIZEOF Unary_Exp                              { $$ = new UExp("sizeof", $2, TRUE); }
     ;
 
 Unary_Op
@@ -234,9 +231,10 @@ Unary_Op
 Postfix_Exp
     : Primary_Exp                                   { $$ = $1; }
     | Postfix_Exp '[' Exp ']'                       { $$ = new BExp("[]", $1, $3); }
-    | Postfix_Exp PTR_OP Identifier                 { $$ = new BExp("->", $1, $3); }
     | Postfix_Exp INC_OP                            { $$ = new UExp("++", $1, FALSE); }
     | Postfix_Exp DEC_OP                            { $$ = new UExp("--", $1, FALSE); }
+    | Postfix_Exp '(' Exp ')'                       { $$ = new BExp("()", $1, $3); }
+    | Postfix_Exp '(' ')'                           { $$ = new UExp("()", $1, FALSE); }
     ;
 
 
@@ -257,7 +255,7 @@ Func_Declarator
 
 Identifier_List
     : Identifier                                    { $$ = new IdentifierList((Id*)$1); }
-    | Identifier_List ',' Identifier                { $1 -> addId((Id*)$1); $$ = $1; }
+    | Identifier_List ',' Identifier                { $1 -> addId((Id*)$3); $$ = $1; }
     ;
 
 
@@ -324,9 +322,11 @@ Jump_Statement
 
 int main() {
     yyparse();
+    printf("complete compile\n");
     return 0;
 }
 
 int yyerror(char *s) {
     printf("Error: %s\n", s);
+    return 0;
 }
