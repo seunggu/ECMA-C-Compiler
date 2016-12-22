@@ -503,7 +503,6 @@ void BExp::printExp(int lmargin) {
 
 TypeInfo* BExp::codeR(ofstream &outFile, SymbolTable *symbolTable) {
 
-
     // 둘 중 하나라도 ID의 주소 값을 가져야 할 경우
     if (op == "=") {
         SymbolEntry * leftSymbolEntry = ((Id*)left) -> codeL(outFile, symbolTable);
@@ -512,6 +511,10 @@ TypeInfo* BExp::codeR(ofstream &outFile, SymbolTable *symbolTable) {
         outFile << "\tsto" << endl;
         symbolTable -> changeType(leftSymbolEntry -> name, rightType);
         return new IDType(rightType);
+    }
+
+    if (op == "+") {
+
     }
 
     TypeInfo * leftType = left -> codeR(outFile, symbolTable);
@@ -559,6 +562,15 @@ TypeInfo* BExp::codeR(ofstream &outFile, SymbolTable *symbolTable) {
         exit(1);
     } else if (op == "-") {
 
+        // 타입이 ID이면 ID의 valType으로 변경하여 연산
+        if (leftType -> type == ID) {
+            leftType = ((IDType*)leftType) -> valTypeInfo;
+        }
+
+        if (rightType -> type == ID) {
+            rightType = ((IDType*)rightType) -> valTypeInfo;
+        }
+
         // 정수끼리의 뺄셈
         if ((leftType -> type == INT || leftType -> type == BOOL) &&
             (rightType -> type == INT || rightType -> type == BOOL)) {
@@ -571,6 +583,15 @@ TypeInfo* BExp::codeR(ofstream &outFile, SymbolTable *symbolTable) {
         exit(1);
     } else if (op == "*") {
 
+        // 타입이 ID이면 ID의 valType으로 변경하여 연산
+        if (leftType -> type == ID) {
+            leftType = ((IDType*)leftType) -> valTypeInfo;
+        }
+
+        if (rightType -> type == ID) {
+            rightType = ((IDType*)rightType) -> valTypeInfo;
+        }
+
         // 정수끼리의 곱셈
         if ((leftType -> type == INT || leftType -> type == BOOL) &&
             (rightType -> type == INT || rightType -> type == BOOL)) {
@@ -582,6 +603,14 @@ TypeInfo* BExp::codeR(ofstream &outFile, SymbolTable *symbolTable) {
         cout << "another * not yet" << endl;
         exit(1);
     } else if (op == "/") {
+        // 타입이 ID이면 ID의 valType으로 변경하여 연산
+        if (leftType -> type == ID) {
+            leftType = ((IDType*)leftType) -> valTypeInfo;
+        }
+
+        if (rightType -> type == ID) {
+            rightType = ((IDType*)rightType) -> valTypeInfo;
+        }
 
         // 정수끼리의 나눗셈
         if ((leftType -> type == INT || leftType -> type == BOOL) &&
@@ -594,6 +623,14 @@ TypeInfo* BExp::codeR(ofstream &outFile, SymbolTable *symbolTable) {
         cout << "another / not yet" << endl;
         exit(1);
     } else if (op == "<") {
+        // 타입이 ID이면 ID의 valType으로 변경하여 연산
+        if (leftType -> type == ID) {
+            leftType = ((IDType*)leftType) -> valTypeInfo;
+        }
+
+        if (rightType -> type == ID) {
+            rightType = ((IDType*)rightType) -> valTypeInfo;
+        }
 
         // 정수끼리의 비교
         if ((leftType -> type == INT || leftType -> type == BOOL) &&
@@ -607,6 +644,15 @@ TypeInfo* BExp::codeR(ofstream &outFile, SymbolTable *symbolTable) {
         exit(1);
     } else if (op == "<=") {
 
+        // 타입이 ID이면 ID의 valType으로 변경하여 연산
+        if (leftType -> type == ID) {
+            leftType = ((IDType*)leftType) -> valTypeInfo;
+        }
+
+        if (rightType -> type == ID) {
+            rightType = ((IDType*)rightType) -> valTypeInfo;
+        }
+
         // 정수끼리의 비교
         if (leftType -> type == INT && rightType -> type == INT) {
             outFile << "\tleq" << endl;
@@ -618,6 +664,16 @@ TypeInfo* BExp::codeR(ofstream &outFile, SymbolTable *symbolTable) {
         exit(1);
     } else if (op == ">") {
 
+        // 타입이 ID이면 ID의 valType으로 변경하여 연산
+        if (leftType -> type == ID) {
+            leftType = ((IDType*)leftType) -> valTypeInfo;
+        }
+
+        if (rightType -> type == ID) {
+            rightType = ((IDType*)rightType) -> valTypeInfo;
+        }
+
+
         // 정수끼리의 비교
         if (leftType -> type == INT && rightType -> type == INT) {
             outFile << "\tgrt" << endl;
@@ -628,6 +684,16 @@ TypeInfo* BExp::codeR(ofstream &outFile, SymbolTable *symbolTable) {
         cout << "another > not yet" << endl;
         exit(1);
     } else if (op == ">=") {
+
+        // 타입이 ID이면 ID의 valType으로 변경하여 연산
+        if (leftType -> type == ID) {
+            leftType = ((IDType*)leftType) -> valTypeInfo;
+        }
+
+        if (rightType -> type == ID) {
+            rightType = ((IDType*)rightType) -> valTypeInfo;
+        }
+
 
         // 정수끼리의 비교
         if (leftType -> type == INT && rightType -> type == INT) {
@@ -660,6 +726,16 @@ TypeInfo* BExp::codeR(ofstream &outFile, SymbolTable *symbolTable) {
         exit(1);
     } else if (op == "!=") {
 
+        // 타입이 ID이면 ID의 valType으로 변경하여 연산
+        if (leftType -> type == ID) {
+            leftType = ((IDType*)leftType) -> valTypeInfo;
+        }
+
+        if (rightType -> type == ID) {
+            rightType = ((IDType*)rightType) -> valTypeInfo;
+        }
+
+
         // 정수끼리의 비교
         if ((leftType -> type == INT || leftType -> type == BOOL) &&
             (rightType -> type == INT || rightType -> type == BOOL)) {
@@ -671,6 +747,15 @@ TypeInfo* BExp::codeR(ofstream &outFile, SymbolTable *symbolTable) {
         cout << "another != not yet" << endl;
         exit(1);
     } else if (op == "&&") {
+
+        // 타입이 ID이면 ID의 valType으로 변경하여 연산
+        if (leftType -> type == ID) {
+            leftType = ((IDType*)leftType) -> valTypeInfo;
+        }
+
+        if (rightType -> type == ID) {
+            rightType = ((IDType*)rightType) -> valTypeInfo;
+        }
 
         // 불리언끼리의 로직
         if ((leftType -> type == INT || leftType -> type == BOOL) &&
@@ -684,6 +769,16 @@ TypeInfo* BExp::codeR(ofstream &outFile, SymbolTable *symbolTable) {
         exit(1);
     } else if (op == "||") {
 
+        // 타입이 ID이면 ID의 valType으로 변경하여 연산
+        if (leftType -> type == ID) {
+            leftType = ((IDType*)leftType) -> valTypeInfo;
+        }
+
+        if (rightType -> type == ID) {
+            rightType = ((IDType*)rightType) -> valTypeInfo;
+        }
+
+        
         // 불리언끼리의 로직
         if ((leftType -> type == INT || leftType -> type == BOOL) &&
             (rightType -> type == INT || rightType -> type == BOOL)) {

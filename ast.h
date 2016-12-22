@@ -179,6 +179,7 @@ public:
     IntNum(int val);
     virtual void printExp(int lmargin);
     virtual TypeInfo* codeR(ofstream &outFile, SymbolTable * symbolTable);
+    TypeInfo* getType();
 };
 
 // 실수 숫자 리터럴 클래스
